@@ -1,1153 +1,538 @@
-// ============================================================
-// Discover Tiama — interactivity (no framework, no build step)
-// ============================================================
+/* =====================================================================
+   Discover Tiama — a scrolling story
+   A single fixed canvas renders every 3D scene; editorial plates scroll
+   over it. No libraries: the 3D is a small software renderer drawing
+   flat-shaded quads with canvas 2D.
+   ===================================================================== */
+(() => {
+"use strict";
 
-/* ---------- Bath mood mixer ---------- */
-(function mixer() {
-  const range = document.getElementById("mixerRange");
-  const readout = document.getElementById("mixerReadout");
-  const svg = document.getElementById("mixerSvg");
-  if (!range) return;
+/* ============================ palette ============================ */
+const C = {
+  /* milk + dairy */
+  milk:   [252,249,243], cream:  [242,233,218], ivory:[248,242,232],
+  /* cow */
+  hide:   [246,241,232], hideDk:[214,205,192], spot:[ 58, 48, 52],
+  muzzle: [228,198,192], horn:  [214,196,168], hoof:[ 74, 62, 64],
+  /* wood + metal */
+  wood:   [196,158,110], woodDk:[150,114, 74], steel:[176,180,188],
+  steelDk:[128,134,146], pail:  [206,210,216],
+  /* land + sea */
+  grass:  [122,152, 98], grassDk:[ 86,116, 70], soil:[150,120, 86],
+  sea:    [ 96,140,164], seaDk: [ 58, 96,124], sand:[224,198,158],
+  /* the three flavours */
+  blue:   [ 72, 92, 196], blueLt:[126,142,224],
+  goji:   [226,110, 58], gojiLt:[244,150, 98],
+  acai:   [140, 44, 96], acaiLt:[176, 78,132],
+  /* leaf + fruit */
+  leaf:   [ 94,132, 76], leafLt:[128,166, 98],
+  /* neutrals */
+  ink:    [ 44, 30, 44], slate:[ 92, 78, 92], glass:[216,226,232]
+};
+const mix = (a,b,t) => [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t];
+const rgb = c => "rgb(" + (c[0]|0) + "," + (c[1]|0) + "," + (c[2]|0) + ")";
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const smooth = t => { t = clamp(t,0,1); return t*t*(3-2*t); };
 
-  const labels = [
-    { max: 20, text: "Quick rinse, still nice", color: "#4b56c9" },
-    { max: 45, text: "Soft everyday reset", color: "#6d5fc9" },
-    { max: 70, text: "Leisurely lather", color: "#a53d78" },
-    { max: 101, text: "Full indulgent soak", color: "#ff7a45" },
-  ];
-
-  function update() {
-    const v = Number(range.value);
-    const match = labels.find((l) => v <= l.max);
-    readout.textContent = match.text;
-    readout.style.color = match.color;
-    const r = 50 + v * 0.35;
-    svg.innerHTML = `<circle cx="100" cy="100" r="${r}" fill="${match.color}22" /><circle cx="100" cy="100" r="${r * 0.6}" fill="${match.color}44" />`;
-  }
-  range.addEventListener("input", update);
-  update();
-})();
-
-/* ---------- Mood tabs ---------- */
-(function moodTabs() {
-  const tabs = document.querySelectorAll(".mood-tab");
-  if (!tabs.length) return;
-
-  const data = {
-    blueberry: {
-      num: "01",
-      name: "BLUEBERRY",
-      title: "Fresh reset",
-      desc: "A bright, juicy mood for energetic mornings.",
-      color: "#4b56c9",
-      soft: "#e8e9fb",
-    },
-    goji: {
-      num: "02",
-      name: "GOJI BERRY",
-      title: "Golden lift",
-      desc: "A warm, antioxidant-rich mood for slow, mindful evenings.",
-      color: "#ff7a45",
-      soft: "#ffe9dd",
-    },
-    acai: {
-      num: "03",
-      name: "ACAI BERRY",
-      title: "Deep indulgence",
-      desc: "A rich, velvety mood for a spa-like wind down.",
-      color: "#a53d78",
-      soft: "#f6e3ee",
-    },
-  };
-
-  const eyebrow = document.getElementById("moodEyebrow");
-  const title = document.getElementById("moodTitle");
-  const desc = document.getElementById("moodDesc");
-  const swatch = document.getElementById("moodSwatch");
-
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      tabs.forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
-      const d = data[tab.dataset.mood];
-      eyebrow.textContent = `${d.num}  ${d.name}  ·  YOUR MOOD`;
-      eyebrow.style.color = d.color;
-      title.textContent = d.title;
-      title.style.color = d.color;
-      desc.textContent = d.desc;
-      swatch.style.background = d.soft;
-    });
-  });
-})();
-
-/* ---------- Pack picker ---------- */
-(function packPicker() {
-  const btns = document.querySelectorAll(".picker-btn");
-  if (!btns.length) return;
-
-  const data = {
-    curious: {
-      badge: "BEST FOR TRIAL · FIRST-DATE ENERGY",
-      size: "50 g",
-      price: "₹49",
-      note: "A small commitment with the full Tiama mood. Low entry price · easy first experience.",
-    },
-    convinced: {
-      badge: "FULL SIZE · MADE FOR REPEAT USE",
-      size: "125 g",
-      price: "₹92",
-      note: "The complete Bokkaido milk ritual, sized for everyday use. Better value per gram once you're hooked.",
-    },
-  };
-
-  const badge = document.getElementById("packBadge");
-  const size = document.getElementById("packSize");
-  const price = document.getElementById("packPrice");
-  const note = document.getElementById("packNote");
-
-  btns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      btns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      const d = data[btn.dataset.pack];
-      badge.textContent = d.badge;
-      size.textContent = d.size;
-      price.textContent = d.price;
-      note.textContent = d.note;
-    });
-  });
-})();
-
-/* ---------- Milk-drop quiz ---------- */
-(function quiz() {
-  const body = document.getElementById("quizBody");
-  const progressEl = document.getElementById("quizProgress");
-  if (!body) return;
-
-  const questions = [
-    {
-      q: "What makes Tiama's ingredient story different?",
-      options: [
-        { label: "Japanese Bokkaido Milk", correct: true },
-        { label: "Mint crystals", correct: false },
-        { label: "Sea salt", correct: false },
-      ],
-      feedback: "Bokkaido Milk is the hero ingredient — rich, gentle, and the first of its kind in an Indian soap bar.",
-    },
-    {
-      q: "What's the low-commitment way to try Tiama?",
-      options: [
-        { label: "The 50 g bar at ₹49", correct: true },
-        { label: "A family pack of 6", correct: false },
-        { label: "A yearly subscription", correct: false },
-      ],
-      feedback: "50 g at ₹49 is the easy first step — full Tiama mood, small commitment.",
-    },
-    {
-      q: "How would you describe the Tiama personality?",
-      options: [
-        { label: "Strictly clinical", correct: false },
-        { label: "Young at heart", correct: false },
-        { label: "Loud and overpowering", correct: false },
-      ],
-      feedback: "\"Young at heart\" — playful, expressive, and premium without taking itself too seriously.",
-      // note: correct flag set below to keep object concise
-    },
-  ];
-  questions[2].options[1].correct = true;
-
-  let current = 0;
-  let score = 0;
-
-  function renderProgress() {
-    progressEl.innerHTML = questions
-      .map((_, i) => {
-        let cls = "quiz-dot";
-        if (i < current) cls += " done";
-        else if (i === current) cls += " current";
-        return `<div class="${cls}"></div>`;
-      })
-      .join("");
-  }
-
-  function renderQuestion() {
-    renderProgress();
-    if (current >= questions.length) {
-      body.innerHTML = `
-        <div class="quiz-done">
-          <div class="badge">🏆</div>
-          <h3 class="h3">${score}/${questions.length} — now you're a Tiama expert!</h3>
-          <p>You know the milk, the mood, and the entry price. Time to ask for Tiama at your neighbourhood retailer.</p>
-        </div>`;
-      return;
-    }
-
-    const item = questions[current];
-    const letters = ["A", "B", "C"];
-    body.innerHTML = `
-      <p class="quiz-q-label">QUESTION ${String(current + 1).padStart(2, "0")}</p>
-      <p class="quiz-question">${item.q}</p>
-      <div class="quiz-options">
-        ${item.options
-          .map(
-            (opt, i) => `
-          <button class="quiz-opt" data-index="${i}">
-            <span class="letter">${letters[i]}</span>${opt.label}
-          </button>`
-          )
-          .join("")}
-      </div>
-      <p class="quiz-feedback" id="quizFeedback"></p>
-      <div class="quiz-next" id="quizNextWrap"></div>
-    `;
-
-    const optButtons = body.querySelectorAll(".quiz-opt");
-    optButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        optButtons.forEach((b) => (b.disabled = true));
-        const idx = Number(btn.dataset.index);
-        const chosen = item.options[idx];
-        optButtons.forEach((b, i) => {
-          if (item.options[i].correct) b.classList.add("correct");
-          else if (i === idx) b.classList.add("wrong");
-        });
-        if (chosen.correct) score++;
-        document.getElementById("quizFeedback").textContent = item.feedback;
-        document.getElementById("quizNextWrap").innerHTML =
-          `<button class="btn btn-primary" id="quizNextBtn">${current === questions.length - 1 ? "See my score" : "Next question"}</button>`;
-        document.getElementById("quizNextBtn").addEventListener("click", () => {
-          current++;
-          renderQuestion();
-        });
-      });
-    });
-  }
-
-  renderQuestion();
-})();
-
-/* ---------- Shared scroll-progress engine ----------
-   Computes a 0..1 progress value for how far the user has scrolled through
-   a tall "track" element (used to drive both the Milk Journey scrollytelling
-   and the 3D product showcase). rAF-throttled so both sections share one
-   cheap scroll listener pattern instead of each rolling their own. */
-function makeScrollProgress(trackEl, onProgress) {
-  let trackTop = 0;
-  let trackHeight = 0;
-  let viewportHeight = window.innerHeight;
-  let ticking = false;
-
-  function measure() {
-    const rect = trackEl.getBoundingClientRect();
-    trackTop = rect.top + window.scrollY;
-    trackHeight = trackEl.offsetHeight;
-    viewportHeight = window.innerHeight;
-  }
-
-  function computeAndEmit() {
-    const scrollable = trackHeight - viewportHeight;
-    let progress = scrollable > 0 ? (window.scrollY - trackTop) / scrollable : 0;
-    if (progress < 0) progress = 0;
-    if (progress > 1) progress = 1;
-    onProgress(progress);
-    ticking = false;
-  }
-
-  function onScrollOrResize() {
-    if (!ticking) {
-      window.requestAnimationFrame(computeAndEmit);
-      ticking = true;
-    }
-  }
-
-  measure();
-  computeAndEmit();
-  window.addEventListener("scroll", onScrollOrResize, { passive: true });
-  window.addEventListener("resize", () => {
-    measure();
-    onScrollOrResize();
-  });
-
-  return {
-    recalc: () => { measure(); onScrollOrResize(); },
-  };
-}
-
-const prefersReducedMotion =
-  window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-// Below this width the two-column pin layout collapses to a single stacked
-// column (same breakpoint used across this file's other grid sections), and
-// stacked stage content is taller than a 100vh pinned viewport can hold.
-// Evaluated once at load, matching how prefersReducedMotion is handled —
-// simpler than tearing down/rebuilding a pinned scrub or a WebGL scene on
-// live resize, and a rotate-triggered reload is an acceptable trade-off.
-const isNarrowViewport =
-  window.matchMedia && window.matchMedia("(max-width: 860px)").matches;
-const useStaticLayout = prefersReducedMotion || isNarrowViewport;
-
-function hasWebGL() {
-  try {
-    const test = document.createElement("canvas");
-    return !!(
-      window.WebGLRenderingContext &&
-      (test.getContext("webgl") || test.getContext("experimental-webgl"))
-    );
-  } catch (e) {
-    return false;
-  }
-}
-
-/* ============================================================
-   Shared 3D model builders
-   Colourful, low-poly primitive models built directly from Three.js
-   geometry (boxes, spheres, cylinders, an extruded oval) — no external
-   asset files, so the whole site stays a framework-free static page.
-   Reused by the hero visual, the Milk Journey scrollytelling scene, and
-   the product showcase.
-   ============================================================ */
-
-const TIAMA_FLAVORS = [
-  {
-    key: "blueberry",
-    label: "01",
-    name: "Blueberry",
-    desc: "A bright, juicy mood for energetic mornings.",
-    hex: 0x4b56c9,
-    css: "#4b56c9",
-  },
-  {
-    key: "goji",
-    label: "02",
-    name: "Goji Berry",
-    desc: "A warm, antioxidant-rich mood for slow, mindful evenings.",
-    hex: 0xff7a45,
-    css: "#ff7a45",
-  },
-  {
-    key: "acai",
-    label: "03",
-    name: "Acai Berry",
-    desc: "A rich, velvety mood for a spa-like wind down.",
-    hex: 0xa53d78,
-    css: "#a53d78",
-  },
+/* ============ the journey's light: Hokkaido dawn → Indian dusk ============ */
+const ARC = [
+  {t:0.00, bg:[250,245,235], key:[255,252,244], sh:[162,146,150], gnd:[238,228,214]}, /* the brand's own warm light */
+  {t:0.15, bg:[228,236,244], key:[255,253,250], sh:[148,158,172], gnd:[212,222,232]}, /* cold north morning */
+  {t:0.31, bg:[234,241,237], key:[255,253,246], sh:[144,158,152], gnd:[210,222,208]}, /* pasture light */
+  {t:0.46, bg:[212,230,244], key:[255,254,252], sh:[136,156,176], gnd:[196,216,234]}, /* altitude */
+  {t:0.60, bg:[249,234,212], key:[255,244,220], sh:[164,140,124], gnd:[232,212,184]}, /* arrival, warm */
+  {t:0.73, bg:[243,221,226], key:[255,236,232], sh:[158,124,140], gnd:[228,200,208]}, /* the berry blend */
+  {t:0.87, bg:[250,242,232], key:[255,250,242], sh:[158,142,140], gnd:[236,226,214]}, /* the finished bar */
+  {t:1.00, bg:[ 58, 40, 58], key:[228,176,196], sh:[ 48, 36, 50], gnd:[ 52, 38, 54]}  /* close, deep plum */
 ];
-
-// An oval / lozenge soap-bar shape: an ellipse extruded with bevelled edges,
-// then rotated so it lies flat like a real bar of soap (oval outline visible
-// from above, thickness running vertically).
-function buildOvalBarGeometry(opts) {
-  const o = opts || {};
-  const rx = o.rx || 1.05;
-  const ry = o.ry || 0.55;
-  const depth = o.depth || 0.5;
-  const bevel = o.bevel || 0.16;
-
-  const shape = new THREE.Shape();
-  shape.absellipse(0, 0, rx, ry, 0, Math.PI * 2, false, 0);
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: depth,
-    bevelEnabled: true,
-    bevelThickness: bevel,
-    bevelSize: bevel * 0.9,
-    bevelSegments: 8,
-    curveSegments: 48,
-    steps: 1,
-  });
-  geo.center();
-  geo.rotateX(-Math.PI / 2);
-  return geo;
+function lightAt(p){
+  let i = 0;
+  while (i < ARC.length - 2 && p > ARC[i+1].t) i++;
+  const a = ARC[i], b = ARC[i+1];
+  const t = smooth((p - a.t) / Math.max(1e-6, b.t - a.t));
+  return {bg:mix(a.bg,b.bg,t), key:mix(a.key,b.key,t), sh:mix(a.sh,b.sh,t), gnd:mix(a.gnd,b.gnd,t)};
 }
 
-function buildLabelTexture(flavor) {
-  const c = document.createElement("canvas");
-  c.width = 512;
-  c.height = 256;
-  const ctx = c.getContext("2d");
-  ctx.clearRect(0, 0, c.width, c.height);
-  ctx.fillStyle = flavor.css;
-  ctx.globalAlpha = 0.82;
-  ctx.font = "700 82px Georgia, 'Times New Roman', serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("TIAMA", c.width / 2, c.height / 2);
-  const tex = new THREE.CanvasTexture(c);
-  tex.needsUpdate = true;
-  return tex;
+/* ============================ mesh building ============================ */
+function mesh(){ return {v:[], f:[]}; }
+function vtx(m,x,y,z){ m.v.push(x,y,z); return (m.v.length/3)-1; }
+const QUADS = [[0,1,2,3],[5,4,7,6],[4,0,3,7],[1,5,6,2],[3,2,6,7],[4,5,1,0]];
+
+function box(m, cx,cy,cz, w,h,d, col, opt){
+  const x0=cx-w/2, x1=cx+w/2, y0=cy-h/2, y1=cy+h/2, z0=cz-d/2, z1=cz+d/2;
+  const b = m.v.length/3;
+  vtx(m,x0,y0,z1); vtx(m,x1,y0,z1); vtx(m,x1,y1,z1); vtx(m,x0,y1,z1);
+  vtx(m,x0,y0,z0); vtx(m,x1,y0,z0); vtx(m,x1,y1,z0); vtx(m,x0,y1,z0);
+  for (const f of QUADS) m.f.push({i:[b+f[0],b+f[1],b+f[2],b+f[3]], c:col, o:opt});
+  return m;
 }
-
-// An oval soap bar with a soft embossed "TIAMA" label sitting on top —
-// used by the hero visual, the journey's finale beat, and the showcase.
-function buildSoapBar(flavor, opts) {
-  const o = opts || {};
-  const rx = o.rx || 1.05;
-  const ry = o.ry || 0.55;
-  const depth = o.depth || 0.5;
-  const bevel = o.bevel || 0.16;
-
-  const group = new THREE.Group();
-  const geo = buildOvalBarGeometry(o);
-  const mat = new THREE.MeshStandardMaterial({
-    color: flavor.hex,
-    roughness: 0.42,
-    metalness: 0.04,
-  });
-  const bar = new THREE.Mesh(geo, mat);
-  group.add(bar);
-
-  // A rectangular plane (not an oval ShapeGeometry) — PlaneGeometry has
-  // guaranteed, correctly-normalized 0..1 UVs, and the label texture's
-  // background is fully transparent, so only the wordmark itself is visible.
-  const labelGeo = new THREE.PlaneGeometry(rx * 1.15, ry * 1.15);
-  labelGeo.rotateX(-Math.PI / 2);
-  const labelMat = new THREE.MeshBasicMaterial({
-    map: buildLabelTexture(flavor),
-    transparent: true,
-    depthWrite: false,
-  });
-  const label = new THREE.Mesh(labelGeo, labelMat);
-  label.position.y = depth / 2 + bevel + 0.012;
-  label.renderOrder = 1;
-  group.add(label);
-
-  group.userData.bar = bar;
-  group.userData.material = mat;
-  group.userData.label = label;
-  return group;
+/* box rotated about Y (angled legs, wings, arms) */
+function boxY(m, cx,cy,cz, w,h,d, ang, col, opt){
+  const s=Math.sin(ang), c=Math.cos(ang), b=m.v.length/3;
+  const pts=[[-w/2,-h/2, d/2],[ w/2,-h/2, d/2],[ w/2, h/2, d/2],[-w/2, h/2, d/2],
+             [-w/2,-h/2,-d/2],[ w/2,-h/2,-d/2],[ w/2, h/2,-d/2],[-w/2, h/2,-d/2]];
+  for (const p of pts) vtx(m, cx + p[0]*c + p[2]*s, cy + p[1], cz - p[0]*s + p[2]*c);
+  for (const f of QUADS) m.f.push({i:[b+f[0],b+f[1],b+f[2],b+f[3]], c:col, o:opt});
+  return m;
 }
-
-// A small, friendly low-poly cow — built entirely from primitives so it
-// stays lightweight and matches the site's playful, rounded illustration
-// style even in 3D.
-function buildCow() {
-  const group = new THREE.Group();
-  const cream = new THREE.MeshStandardMaterial({ color: 0xfbf1e6, roughness: 0.75 });
-  const dark = new THREE.MeshStandardMaterial({ color: 0x2b1c2b, roughness: 0.6 });
-  const pink = new THREE.MeshStandardMaterial({ color: 0xe8b7a3, roughness: 0.65 });
-
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.95, 0.95), cream);
-  torso.position.y = 0.75;
-  group.add(torso);
-
-  const head = new THREE.Group();
-  head.position.set(1.15, 0.95, 0);
-  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.44, 14, 10), cream);
-  skull.scale.set(1, 0.92, 0.85);
-  head.add(skull);
-  const snout = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 8), pink);
-  snout.position.set(0.36, -0.12, 0);
-  snout.scale.set(0.9, 0.65, 0.85);
-  head.add(snout);
-  const nostrilGeo = new THREE.SphereGeometry(0.035, 6, 6);
-  const nostrilL = new THREE.Mesh(nostrilGeo, dark);
-  nostrilL.position.set(0.52, -0.1, 0.09);
-  head.add(nostrilL);
-  const nostrilR = nostrilL.clone();
-  nostrilR.position.z = -0.09;
-  head.add(nostrilR);
-  const eyeGeo = new THREE.SphereGeometry(0.055, 8, 8);
-  const eyeL = new THREE.Mesh(eyeGeo, dark);
-  eyeL.position.set(0.28, 0.14, 0.32);
-  head.add(eyeL);
-  const eyeR = eyeL.clone();
-  eyeR.position.z = -0.32;
-  head.add(eyeR);
-  const earGeo = new THREE.ConeGeometry(0.14, 0.3, 8);
-  const earL = new THREE.Mesh(earGeo, cream);
-  earL.rotation.z = Math.PI / 2.3;
-  earL.position.set(0.05, 0.42, 0.42);
-  head.add(earL);
-  const earR = earL.clone();
-  earR.position.z = -0.42;
-  head.add(earR);
-  group.add(head);
-
-  const legGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.62, 8);
-  [
-    [0.62, 0.31, 0.32],
-    [0.62, 0.31, -0.32],
-    [-0.62, 0.31, 0.32],
-    [-0.62, 0.31, -0.32],
-  ].forEach((p) => {
-    const leg = new THREE.Mesh(legGeo, cream);
-    leg.position.set(p[0], p[1], p[2]);
-    group.add(leg);
-  });
-
-  const spotGeo = new THREE.SphereGeometry(0.22, 8, 6);
-  const spot1 = new THREE.Mesh(spotGeo, dark);
-  spot1.scale.set(1, 0.5, 0.68);
-  spot1.position.set(-0.35, 1.06, 0.4);
-  group.add(spot1);
-  const spot2 = new THREE.Mesh(spotGeo, dark);
-  spot2.scale.set(0.8, 0.4, 0.6);
-  spot2.position.set(0.25, 0.72, -0.42);
-  group.add(spot2);
-
-  const tail = new THREE.Group();
-  tail.position.set(-0.95, 0.98, 0);
-  const tailBone = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.03, 0.55, 6), cream);
-  tailBone.position.y = -0.25;
-  tail.add(tailBone);
-  const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), dark);
-  tuft.position.y = -0.52;
-  tail.add(tuft);
-  group.add(tail);
-
-  group.userData.head = head;
-  group.userData.tail = tail;
-  return group;
+/* box rotated about Z (raised heads, tilted panels) */
+function boxZ(m, cx,cy,cz, w,h,d, ang, col, opt){
+  const s=Math.sin(ang), c=Math.cos(ang), b=m.v.length/3;
+  const pts=[[-w/2,-h/2, d/2],[ w/2,-h/2, d/2],[ w/2, h/2, d/2],[-w/2, h/2, d/2],
+             [-w/2,-h/2,-d/2],[ w/2,-h/2,-d/2],[ w/2, h/2,-d/2],[-w/2, h/2,-d/2]];
+  for (const p of pts) vtx(m, cx + p[0]*c - p[1]*s, cy + p[0]*s + p[1]*c, cz + p[2]);
+  for (const f of QUADS) m.f.push({i:[b+f[0],b+f[1],b+f[2],b+f[3]], c:col, o:opt});
+  return m;
 }
-
-// Beat 1: the cow being milked, with the stream landing in a pail that
-// visibly fills as the story's local "reveal" progress advances.
-function buildMilkingScene() {
-  const group = new THREE.Group();
-
-  const cow = buildCow();
-  cow.scale.setScalar(0.85);
-  cow.position.set(-0.35, 0, -0.1);
-  cow.rotation.y = Math.PI * 0.12;
-  group.add(cow);
-
-  // A straight-walled (not tapered) pail, so the milk fill cylinder inside
-  // it can never poke through a narrowing wall as it rises.
-  const pailMat = new THREE.MeshStandardMaterial({ color: 0xcabfae, roughness: 0.4, metalness: 0.15, side: THREE.DoubleSide });
-  const pail = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.42, 18, 1, true), pailMat);
-  pail.position.set(0.62, 0.21, 0.2);
-  group.add(pail);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.02, 8, 20), pailMat);
-  rim.rotation.x = Math.PI / 2;
-  rim.position.set(0.62, 0.42, 0.2);
-  group.add(rim);
-
-  const milkFill = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.26, 0.26, 1, 18),
-    new THREE.MeshStandardMaterial({ color: 0xfffdf8, roughness: 0.25 })
-  );
-  milkFill.position.set(0.62, 0.02, 0.2);
-  milkFill.scale.y = 0.02;
-  group.add(milkFill);
-
-  const dropGeo = new THREE.SphereGeometry(0.035, 8, 8);
-  const dropMat = new THREE.MeshStandardMaterial({ color: 0xfffaf3, roughness: 0.2 });
-  const drops = [];
-  for (let i = 0; i < 4; i++) {
-    const d = new THREE.Mesh(dropGeo, dropMat);
-    d.position.set(0.58, 0.78, 0.15);
-    d.visible = false;
-    group.add(d);
-    drops.push(d);
+/* cylinder along any axis; r1 = base radius, r2 = top radius */
+function cyl(m, cx,cy,cz, r1,r2,len, seg, col, opt, axis){
+  axis = axis || "y";
+  const b = m.v.length/3, h0 = -len/2, h1 = len/2;
+  const put = (ang, r, h) => {
+    const u = Math.cos(ang)*r, w = Math.sin(ang)*r;
+    if (axis === "y")      vtx(m, cx+u, cy+h, cz+w);
+    else if (axis === "x") vtx(m, cx+h, cy+u, cz+w);
+    else                   vtx(m, cx+u, cy+w, cz+h);
+  };
+  for (let i=0;i<seg;i++) put(i/seg*Math.PI*2, r1, h0);
+  for (let i=0;i<seg;i++) put(i/seg*Math.PI*2, r2, h1);
+  const side = Object.assign({smooth:1}, opt);
+  for (let i=0;i<seg;i++){
+    const j=(i+1)%seg;
+    m.f.push({i:[b+i, b+j, b+seg+j, b+seg+i], c:col, o:side});
   }
-
-  group.userData.cow = cow;
-  group.userData.milkFill = milkFill;
-  group.userData.pailBaseY = 0.0;
-  group.userData.drops = drops;
-  return group;
+  const top=[], bot=[];
+  for (let i=0;i<seg;i++){ top.push(b+seg+i); bot.push(b+seg-1-i); }
+  m.f.push({i:top, c:col, o:opt});
+  m.f.push({i:bot, c:col, o:opt});
+  return m;
+}
+/* a low-poly ball — berries, droplets */
+function ball(m, cx,cy,cz, r, seg, rings, col, opt){
+  const b = m.v.length/3;
+  opt = Object.assign({smooth:1}, opt);
+  for (let j=0;j<=rings;j++){
+    const phi = j/rings*Math.PI;
+    const y = Math.cos(phi)*r, rr = Math.sin(phi)*r;
+    for (let i=0;i<seg;i++){
+      const a = i/seg*Math.PI*2;
+      vtx(m, cx+Math.cos(a)*rr, cy+y, cz+Math.sin(a)*rr);
+    }
+  }
+  for (let j=0;j<rings;j++){
+    for (let i=0;i<seg;i++){
+      const i2=(i+1)%seg;
+      const a = b + j*seg + i,  a2 = b + j*seg + i2;
+      const c1 = b + (j+1)*seg + i, c2 = b + (j+1)*seg + i2;
+      m.f.push({i:[a, a2, c2, c1], c:col, o:opt});
+    }
+  }
+  return m;
+}
+/* THE TIAMA BAR — an oval lozenge: elliptical in plan, pillowed in profile */
+function oval(m, cx,cy,cz, rx,rz,h, seg, rings, col, opt){
+  const b = m.v.length/3;
+  opt = Object.assign({smooth:1}, opt);
+  const prof = k => Math.pow(Math.max(0, 1 - Math.pow(Math.abs(k), 3.4)), 0.34);
+  for (let j=0;j<rings;j++){
+    const k = -1 + 2*(j+0.5)/rings;
+    const s = prof(k), y = cy + k*h/2;
+    for (let i=0;i<seg;i++){
+      const a = i/seg*Math.PI*2;
+      vtx(m, cx + Math.cos(a)*rx*s, y, cz + Math.sin(a)*rz*s);
+    }
+  }
+  for (let j=0;j<rings-1;j++){
+    for (let i=0;i<seg;i++){
+      const i2=(i+1)%seg;
+      m.f.push({i:[b+j*seg+i, b+j*seg+i2, b+(j+1)*seg+i2, b+(j+1)*seg+i], c:col, o:opt});
+    }
+  }
+  const top=[], bot=[];
+  for (let i=0;i<seg;i++){ top.push(b+(rings-1)*seg+i); bot.push(b+seg-1-i); }
+  m.f.push({i:top, c:col, o:opt});
+  m.f.push({i:bot, c:col, o:opt});
+  return m;
+}
+/* leaf cluster for berry sprigs */
+function foliage(m, cx,cy,cz, r, n, col){
+  for (let i=0;i<n;i++){
+    const a = i/n*Math.PI*2 + 0.4;
+    const lean = 0.55 + (i%3)*0.18;
+    const len = r*(0.85 + (i%4)*0.12);
+    boxY(m, cx+Math.cos(a)*r*0.34, cy + len*0.42*lean, cz+Math.sin(a)*r*0.34,
+         r*0.44, len*lean, 2.2, -a, i%2 ? col : mix(col,C.leafLt,0.45));
+  }
+  return m;
 }
 
-// A small, friendly low-poly airplane, nose along local +X.
-function buildAirplane() {
-  const group = new THREE.Group();
-  const body = new THREE.MeshStandardMaterial({ color: 0xfffdf9, roughness: 0.32, metalness: 0.12 });
-  const accent = new THREE.MeshStandardMaterial({ color: 0xff7a45, roughness: 0.4 });
-
-  const fuselage = new THREE.Mesh(new THREE.CapsuleGeometry(0.09, 0.46, 4, 8), body);
-  fuselage.rotation.z = Math.PI / 2;
-  group.add(fuselage);
-
-  const noseCone = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.14, 8), body);
-  noseCone.rotation.z = -Math.PI / 2;
-  noseCone.position.x = 0.32;
-  group.add(noseCone);
-
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.018, 0.72), body);
-  group.add(wing);
-
-  const tailFin = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.17, 0.018), accent);
-  tailFin.position.set(-0.27, 0.09, 0);
-  group.add(tailFin);
-
-  const tailWing = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.015, 0.3), body);
-  tailWing.position.set(-0.27, 0.02, 0);
-  group.add(tailWing);
-
-  group.scale.setScalar(1.5);
-  return group;
+/* ============================ the scenes ============================ */
+/* A cow, built once and reused by the pasture and the milking scene. */
+function addCow(m, ox, flip){
+  const s = flip ? -1 : 1;
+  /* body */
+  box(m, ox+0, 96, 0, 128, 74, 62, C.hide);
+  box(m, ox+0, 128, 0, 120, 22, 58, C.hideDk);                 /* back shading band */
+  /* spots — thin plates proud of the hide */
+  box(m, ox-26, 122, 32, 40, 30, 3, C.spot);
+  box(m, ox+30, 104, 32, 26, 24, 3, C.spot);
+  box(m, ox-14, 100, -32, 34, 28, 3, C.spot);
+  box(m, ox+40, 132, 0, 26, 16, 62, C.spot);
+  /* legs */
+  for (const lx of [-46, 40]) for (const lz of [-20, 20]){
+    box(m, ox+lx, 32, lz, 17, 64, 17, C.hide);
+    box(m, ox+lx, 6, lz, 19, 14, 19, C.hoof);
+  }
+  /* No udder — at this scale it just muddies the silhouette, and the pail in
+     chapter 02 is what actually says "dairy". */
+  /* neck + head */
+  boxZ(m, ox+s*76, 124, 0, 44, 40, 44, s*0.34, C.hide);
+  box(m, ox+s*104, 142, 0, 46, 40, 42, C.hide);                /* skull */
+  box(m, ox+s*126, 127, 0, 22, 21, 29, C.muzzle);              /* muzzle */
+  box(m, ox+s*122, 152, 0, 18, 12, 30, C.spot);                /* brow patch */
+  /* eyes */
+  for (const ez of [-15, 15]) box(m, ox+s*116, 148, ez, 8, 9, 8, C.ink);
+  /* ears */
+  for (const ez of [-24, 24]) boxY(m, ox+s*98, 158, ez, 24, 10, 12, ez>0?0.5:-0.5, C.hideDk);
+  /* horns */
+  for (const ez of [-13, 13]) cyl(m, ox+s*104, 170, ez, 5, 2, 20, 8, C.horn);
+  /* tail */
+  boxZ(m, ox-s*68, 108, 0, 10, 70, 10, s*0.2, C.hide);
+  box(m, ox-s*76, 70, 0, 12, 20, 12, C.spot);
+  return m;
 }
 
-// Beat 2: a stylised ocean strip with Japan and India landmasses, a dashed
-// flight arc between them, and the airplane travelling along that curve.
-function buildFlightScene() {
-  const group = new THREE.Group();
-
-  const ocean = new THREE.Mesh(
-    new THREE.PlaneGeometry(4.2, 2.2),
-    new THREE.MeshStandardMaterial({ color: 0x8fb8c9, roughness: 0.65 })
-  );
-  ocean.rotation.x = -Math.PI / 2;
-  ocean.position.y = -0.05;
-  group.add(ocean);
-
-  function landmass(color, w, d, x, z) {
-    const m = new THREE.Mesh(
-      new THREE.CylinderGeometry(w, w * 1.1, 0.18, 10),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.8 })
-    );
-    m.position.set(x, 0.02, z);
-    m.scale.set(1, 1, d / w);
+const MODELS = {
+  /* 00 — the bar itself, the thing the whole story is about */
+  bar(){
+    const m = mesh();
+    oval(m, 0, 30, 0, 86, 54, 46, 30, 9, C.blue);
+    oval(m, 0, 54, 0, 52, 30, 7, 26, 4, C.blueLt);   /* debossed plate */
+    oval(m, 0, 57, 0, 34, 17, 4, 22, 3, C.blue);     /* inner mark */
+    return m;
+  },
+  /* 01 — Hokkaido pasture */
+  cow(){
+    const m = mesh();
+    addCow(m, 0, false);
+    /* a little pasture underfoot */
+    cyl(m, 0, 2, 0, 168, 176, 8, 26, C.grass, {ground:1});
+    for (const g of [[-118,40],[126,-54],[-92,-96],[104,86]]){
+      cyl(m, g[0], 12, g[1], 13, 9, 18, 10, C.grassDk);
+      foliage(m, g[0], 22, g[1], 20, 5, C.leaf);
+    }
+    return m;
+  },
+  /* 02 — the milking. Turns only gently, so the pail never hides behind the cow. */
+  milking(){
+    const m = mesh();
+    addCow(m, 44, false);
+    /* The pail sits in front of the cow (negative z is toward the camera here)
+       and is drawn large — it is the point of this chapter, not a prop. */
+    const px = -92, pz = -96;
+    cyl(m, px, 32, pz, 46, 52, 64, 22, C.pail);
+    cyl(m, px, 64, pz, 52, 52, 5, 22, C.steelDk);          /* rim */
+    cyl(m, px, 54, pz, 47, 47, 22, 22, C.milk, {glow:1});  /* milk, nearly to the brim */
+    box(m, px-52, 44, pz, 6, 26, 14, C.steelDk);           /* handle lug */
+    /* a few drops still falling in */
+    for (let i=0;i<3;i++)
+      box(m, px+16-i*4, 96 + i*20, pz+14, 7, 14, 7, C.milk, {glow:1});
+    /* the milking stool */
+    cyl(m, -176, 36, -6, 32, 30, 8, 14, C.wood);
+    for (let i=0;i<3;i++){
+      const a = i/3*Math.PI*2 + 0.4;
+      boxY(m, -176+Math.cos(a)*20, 17, -6+Math.sin(a)*20, 6, 36, 6, -a+0.3, C.woodDk);
+    }
+    cyl(m, 0, 2, 0, 206, 214, 8, 26, C.grass, {ground:1});
+    m.spin = {bias:-0.45, span:0.9};
+    return m;
+  },
+  /* 03 — the crossing, Japan to India */
+  plane(){
+    const m = mesh();
+    /* fuselage along X */
+    cyl(m, 0, 110, 0, 26, 26, 150, 20, C.milk, null, "x");
+    cyl(m, 92, 110, 0, 26, 6, 34, 20, C.milk, null, "x");     /* nose cone */
+    cyl(m, -82, 110, 0, 26, 14, 18, 20, C.milk, null, "x");   /* tail cone */
+    /* windows */
+    for (let i=-4;i<=4;i++) box(m, i*15, 118, 26, 8, 8, 3, C.glass, {glow:1});
+    /* a brand stripe down the side */
+    box(m, -6, 100, 25, 150, 10, 3, C.goji);
+    /* wings — short chord, long span, swept back a little */
+    boxY(m,  8, 102,  74, 56, 7, 124, 0.16, C.steel);
+    boxY(m,  8, 102, -74, 56, 7, 124, -0.16, C.steel);
+    /* engines, slung under the wings */
+    cyl(m, 24, 86,  68, 14, 12, 46, 14, C.steelDk, null, "x");
+    cyl(m, 24, 86, -68, 14, 12, 46, 14, C.steelDk, null, "x");
+    /* tailplane + fin */
+    boxY(m, -74, 118,  36, 34, 6, 58, 0.20, C.steel);
+    boxY(m, -74, 118, -36, 34, 6, 58, -0.20, C.steel);
+    boxZ(m, -80, 152, 0, 48, 58, 8, 0.44, C.goji);
+    /* the two coasts below, small and far */
+    cyl(m,  128, 6, 96, 46, 40, 10, 16, C.grassDk);
+    cyl(m, -130, 6, -88, 52, 46, 10, 16, C.sand);
+    m.spin = {bias:-0.5, span:2.1};
+    return m;
+  },
+  /* 04 — the blend */
+  blend(){
+    const m = mesh();
+    /* the milk jug */
+    cyl(m, -34, 54, 0, 46, 52, 104, 22, C.milk);
+    cyl(m, -34, 104, 0, 52, 52, 6, 22, C.cream);
+    cyl(m, -34, 98, 0, 46, 46, 8, 22, C.milk, {glow:1});   /* the milk surface */
+    /* a strap handle, clear of the jug wall so it reads as a handle */
+    box(m, 26, 92, 0, 46, 11, 15, C.cream);
+    box(m, 46, 72, 0, 11, 51, 15, C.cream);
+    box(m, 26, 52, 0, 46, 11, 15, C.cream);
+    /* the three berries, one per flavour */
+    ball(m,  62, 40, 34, 30, 14, 8, C.blue);
+    ball(m,  96, 34, -26, 26, 14, 8, C.goji);
+    ball(m,  50, 32, -44, 24, 14, 8, C.acai);
+    foliage(m, 62, 66, 34, 24, 5, C.leaf);
+    foliage(m, 96, 56, -26, 20, 4, C.leafLt);
+    /* a splash ring on the ground */
+    cyl(m, 0, 3, 0, 164, 172, 6, 26, C.cream, {ground:1});
+    return m;
+  },
+  /* 05 — milled, cut and ready: the three bars */
+  bars(){
+    const m = mesh();
+    /* Laid out as a triangle rather than a row — a row lines up with the
+       camera once per turn and the bars vanish behind each other. */
+    const set = [
+      [-124, -46, C.blue],
+      [ 124, -46, C.goji],
+      [   0,  92, C.acai]
+    ];
+    for (const [x, z, col] of set){
+      oval(m, x, 30, z, 78, 48, 44, 26, 8, col);
+      oval(m, x, 52, z, 46, 27, 7, 22, 4, mix(col, C.milk, 0.36));
+      oval(m, x, 55, z, 30, 16, 4, 20, 3, col);
+    }
+    cyl(m, 0, 3, 0, 208, 216, 6, 28, C.cream, {ground:1});
     return m;
   }
-  group.add(landmass(0x9cbba0, 0.34, 0.6, 1.5, -0.22));
-  group.add(landmass(0xe3c08a, 0.55, 0.7, -1.4, 0.28));
+};
 
-  const markerGeo = new THREE.ConeGeometry(0.06, 0.2, 8);
-  const markerMat = new THREE.MeshStandardMaterial({ color: 0xff7a45 });
-  const japanMarker = new THREE.Mesh(markerGeo, markerMat);
-  japanMarker.rotation.x = Math.PI;
-  japanMarker.position.set(1.5, 0.26, -0.22);
-  group.add(japanMarker);
-  const indiaMarker = japanMarker.clone();
-  indiaMarker.position.set(-1.4, 0.26, 0.28);
-  group.add(indiaMarker);
-
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(1.5, 0.16, -0.22),
-    new THREE.Vector3(0.3, 1.15, 0.22),
-    new THREE.Vector3(-1.4, 0.16, 0.28),
-  ]);
-  const curvePoints = curve.getPoints(48);
-  const curveGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
-  const curveMat = new THREE.LineDashedMaterial({ color: 0xff7a45, dashSize: 0.12, gapSize: 0.09 });
-  const curveLine = new THREE.Line(curveGeo, curveMat);
-  curveLine.computeLineDistances();
-  group.add(curveLine);
-
-  const plane = buildAirplane();
-  group.add(plane);
-
-  group.userData.curve = curve;
-  group.userData.plane = plane;
-  return group;
+/* auto-fit: centre on x/z, sit on y=0, scale every model to one size */
+const BUILT = {};
+for (const k in MODELS){
+  const m = MODELS[k]();
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+  for (let i=0;i<m.v.length;i+=3){
+    x0=Math.min(x0,m.v[i]);   x1=Math.max(x1,m.v[i]);
+    y0=Math.min(y0,m.v[i+1]); y1=Math.max(y1,m.v[i+1]);
+    z0=Math.min(z0,m.v[i+2]); z1=Math.max(z1,m.v[i+2]);
+  }
+  const cx=(x0+x1)/2, cz=(z0+z1)/2;
+  const span = Math.max(x1-x0, z1-z0, (y1-y0)*1.25);
+  const s = 190/span;
+  for (let i=0;i<m.v.length;i+=3){
+    m.v[i]   = (m.v[i]-cx)*s;
+    m.v[i+1] = (m.v[i+1]-y0)*s;
+    m.v[i+2] = (m.v[i+2]-cz)*s;
+  }
+  m.radius = Math.max(x1-x0, z1-z0)/2*s;
+  m.height = (y1-y0)*s;
+  m.spin = m.spin || {bias:-0.62, span:4.2};
+  BUILT[k] = m;
 }
 
-// Beat 3: three flavour orbs swirling around a milky core.
-function buildBlendScene() {
-  const group = new THREE.Group();
-  const core = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 20, 16),
-    new THREE.MeshStandardMaterial({ color: 0xfffaf3, roughness: 0.35 })
-  );
-  group.add(core);
+/* ============================ renderer ============================ */
+const cv = document.getElementById("scene");
+const ctx = cv.getContext("2d", {alpha:false});
+let W=0, H=0, DPR=1;
 
-  const orbitGroup = new THREE.Group();
-  group.add(orbitGroup);
-
-  TIAMA_FLAVORS.forEach((f, i) => {
-    const orb = new THREE.Mesh(
-      new THREE.SphereGeometry(0.3, 16, 12),
-      new THREE.MeshStandardMaterial({ color: f.hex, roughness: 0.35, metalness: 0.05 })
-    );
-    const angle = (i / TIAMA_FLAVORS.length) * Math.PI * 2;
-    orb.position.set(Math.cos(angle) * 1.02, Math.sin(angle * 0.6) * 0.28, Math.sin(angle) * 1.02);
-    orbitGroup.add(orb);
-  });
-
-  group.userData.orbitGroup = orbitGroup;
-  return group;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  cv.style.width = W+"px"; cv.style.height = H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
-// Beat 4: the three finished oval bars, fanned out, foreshadowing the
-// product showcase section right below the journey.
-function buildFinaleScene() {
-  const group = new THREE.Group();
-  const bars = [];
-  TIAMA_FLAVORS.forEach((f, i) => {
-    const bar = buildSoapBar(f, { rx: 0.82, ry: 0.42, depth: 0.4, bevel: 0.13 });
-    const offset = (i - 1) * 1.05;
-    bar.position.set(offset, 0, -Math.abs(i - 1) * 0.3);
-    bar.rotation.y = (i - 1) * 0.35;
-    group.add(bar);
-    bars.push(bar);
-  });
-  group.userData.bars = bars;
-  return group;
+const FOCAL = 780;
+function drawModel(m, opt){
+  const {yaw, pitch, cx, cy, dist, alpha, light} = opt;
+  const cyaw=Math.cos(yaw), syaw=Math.sin(yaw);
+  const cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const n = m.v.length/3;
+  const vx=new Float32Array(n), vy=new Float32Array(n), vz=new Float32Array(n);
+  const sx=new Float32Array(n), sy=new Float32Array(n);
+  for (let i=0;i<n;i++){
+    const x0=m.v[i*3], y0=m.v[i*3+1]-m.height*0.46, z0=m.v[i*3+2];
+    const x1 =  x0*cyaw + z0*syaw;
+    const z1 = -x0*syaw + z0*cyaw;
+    const y2 =  y0*cp + z1*sp;
+    const z2 = -y0*sp + z1*cp + dist;
+    vx[i]=x1; vy[i]=y2; vz[i]=z2;
+    const k = FOCAL / Math.max(60, z2);
+    sx[i] = cx + x1*k; sy[i] = cy - y2*k;
+  }
+  const faces = m.f, out = [];
+  for (let fi=0; fi<faces.length; fi++){
+    const f = faces[fi], idx = f.i;
+    let zsum=0;
+    for (let j=0;j<idx.length;j++) zsum += vz[idx[j]];
+    const a=idx[0], b=idx[1], c=idx[2];
+    let nx=(vy[b]-vy[a])*(vz[c]-vz[a])-(vz[b]-vz[a])*(vy[c]-vy[a]);
+    let ny=(vz[b]-vz[a])*(vx[c]-vx[a])-(vx[b]-vx[a])*(vz[c]-vz[a]);
+    let nz=(vx[b]-vx[a])*(vy[c]-vy[a])-(vy[b]-vy[a])*(vx[c]-vx[a]);
+    const len=Math.hypot(nx,ny,nz)||1; nx/=len; ny/=len; nz/=len;
+    if (nz > 0){ nx=-nx; ny=-ny; nz=-nz; }
+    /* Ground planes are big flat quads: their single averaged depth loses to
+       objects standing on them, so the disc would paint over its own contents.
+       They sit under everything by definition, so force them to the back. */
+    const depth = (f.o && f.o.ground) ? 1e9 : zsum/idx.length;
+    out.push({z:depth, f:f, nx:nx, ny:ny, nz:nz});
+  }
+  out.sort((p,q) => q.z - p.z);
+
+  const LX=-0.44, LY=0.78, LZ=-0.45;
+  ctx.globalAlpha = alpha;
+  ctx.lineJoin = "round";
+  for (const o of out){
+    const f = o.f, idx = f.i;
+    let d = clamp(o.nx*LX + o.ny*LY + o.nz*LZ, -1, 1);
+    let lum = 0.16 + 0.84*clamp(d*0.5+0.5, 0, 1);
+    if (f.o && f.o.glow) lum = Math.min(1, lum + 0.42);
+    const lit = mix(mix(f.c, light.sh, 0.58), mix(f.c, light.key, 0.24), lum);
+    ctx.fillStyle = rgb(lit);
+    /* Curved surfaces still need a stroke — it closes the hairline seams canvas
+       leaves between adjacent fills — but drawn in the fill colour so the quad
+       grid disappears and only the shading describes the form. Flat-sided
+       pieces keep a darker edge, which is what gives them their drawn look. */
+    ctx.strokeStyle = (f.o && f.o.smooth) ? ctx.fillStyle : rgb(mix(lit, C.ink, 0.28));
+    ctx.beginPath();
+    ctx.moveTo(sx[idx[0]], sy[idx[0]]);
+    for (let j=1;j<idx.length;j++) ctx.lineTo(sx[idx[j]], sy[idx[j]]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.lineWidth = 0.6; ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 }
 
-/* ---------- Milk Journey (scrollytelling, now in 3D) ----------
-   One persistent WebGL canvas plays five "beats" — cow, milking, the
-   Japan-to-India flight, the flavour blend, and the finished bars — laid
-   out along a line in 3D space. The camera dollies smoothly between them
-   as the user scrolls, arriving at each beat exactly when that stage's
-   text becomes active, then holding there while the beat's own reveal
-   animation (milk filling the pail, the plane crossing the arc, ...)
-   plays out, before moving on to the next. Falls back to the original
-   flat-illustration stacked layout on narrow viewports / reduced motion /
-   no WebGL, same as before. */
-(function milkJourney() {
-  const section = document.getElementById("journey");
-  const track = document.getElementById("journeyTrack");
-  const canvas = document.getElementById("journeyCanvas");
-  const canvasWrap = document.getElementById("journeyCanvasWrap");
-  if (!section || !track) return;
+function contactShadow(cx, cy, r, alpha, light){
+  ctx.save();
+  ctx.globalAlpha = alpha*0.5;
+  ctx.translate(cx, cy);
+  ctx.scale(1, 0.26);
+  const g = ctx.createRadialGradient(0,0,r*0.15, 0,0,r);
+  const s = light.sh;
+  g.addColorStop(0, "rgba("+(s[0]|0)+","+(s[1]|0)+","+(s[2]|0)+",0.85)");
+  g.addColorStop(1, "rgba("+(s[0]|0)+","+(s[1]|0)+","+(s[2]|0)+",0)");
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
 
-  const stages = Array.from(section.querySelectorAll(".journey-stage"));
-  const dots = Array.from(section.querySelectorAll(".journey-dot"));
-  const hint = document.getElementById("journeyHint");
+/* ============================ scroll wiring ============================ */
+const stages   = [...document.querySelectorAll(".stage")];
+const railNum  = document.getElementById("rail-num");
+const railName = document.getElementById("rail-name");
+const railBar  = document.getElementById("rail-bar");
+const rail     = document.getElementById("rail");
+const reduce   = matchMedia("(prefers-reduced-motion: reduce)");
 
-  let activeIndex = 0;
-  function setActive(index) {
-    if (index === activeIndex) return;
-    activeIndex = index;
-    stages.forEach((el, i) => el.classList.toggle("active", i === index));
-    dots.forEach((el, i) => el.classList.toggle("active", i === index));
+let arcP = 0, active = [], needsDraw = true;
+
+function readScroll(){
+  const vh = window.innerHeight, mid = vh*0.5;
+  const doc = Math.max(1, document.documentElement.scrollHeight - vh);
+  arcP = clamp(window.scrollY/doc, 0, 1);
+
+  active = [];
+  let best = null, bestD = 1e9;
+  let pick = null, pickD = 1e9;
+  for (const s of stages){
+    const r = s.getBoundingClientRect();
+    const model = s.dataset.model;
+    const d = Math.abs((r.top + r.height/2) - mid);
+    if (d < bestD){ bestD = d; best = s; }
+    if (!model || model === "none") continue;
+    if (d < pickD){ pickD = d; pick = {s:s, r:r}; }
   }
-
-  const useStatic3D = useStaticLayout || !hasWebGL() || typeof THREE === "undefined" || !canvas;
-
-  if (useStatic3D) {
-    section.classList.add("journey--static");
-    return;
-  }
-
-  const BEAT_X = [0, 5.5, 11, 16.5, 22];
-  const beats = []; // { group, revealT }
-  let scene, camera, renderer;
-
-  function initScene() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-    const light1 = new THREE.DirectionalLight(0xffffff, 1.1);
-    light1.position.set(3, 5, 4);
-    scene.add(light1);
-    const light2 = new THREE.DirectionalLight(0xffffff, 0.4);
-    light2.position.set(-4, 2, -3);
-    scene.add(light2);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-    const cowScene = buildCow();
-    cowScene.position.x = BEAT_X[0];
-    scene.add(cowScene);
-    beats.push({ group: cowScene, revealT: 0 });
-
-    const milkScene = buildMilkingScene();
-    milkScene.position.x = BEAT_X[1];
-    scene.add(milkScene);
-    beats.push({ group: milkScene, revealT: 0 });
-
-    const flightScene = buildFlightScene();
-    flightScene.position.x = BEAT_X[2];
-    scene.add(flightScene);
-    beats.push({ group: flightScene, revealT: 0 });
-
-    const blendScene = buildBlendScene();
-    blendScene.position.x = BEAT_X[3];
-    scene.add(blendScene);
-    beats.push({ group: blendScene, revealT: 0 });
-
-    const finaleScene = buildFinaleScene();
-    finaleScene.position.x = BEAT_X[4];
-    scene.add(finaleScene);
-    beats.push({ group: finaleScene, revealT: 0 });
-
-    resize();
-    window.addEventListener("resize", resize);
-  }
-
-  function resize() {
-    const w = canvasWrap.clientWidth || 1;
-    const h = canvasWrap.clientHeight || 1;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }
-
-  try {
-    initScene();
-  } catch (e) {
-    section.classList.add("journey--static");
-    return;
-  }
-
-  let latestProgress = 0;
-  const HOLD = 0.7; // fraction of each stage's window spent "at" that beat before travelling on
-
-  function updateCameraAndBeats(progress) {
-    const n = stages.length;
-    const beatProgress = progress * n;
-    const stageIndex = Math.min(n - 1, Math.floor(beatProgress));
-    const sLocal = beatProgress - stageIndex;
-
-    setActive(stageIndex);
-    if (hint) hint.classList.toggle("hidden", progress > 0.04);
-
-    let camX, revealT;
-    if (stageIndex >= n - 1) {
-      camX = BEAT_X[n - 1];
-      revealT = Math.min(1, sLocal / HOLD);
-    } else if (sLocal < HOLD) {
-      camX = BEAT_X[stageIndex];
-      revealT = sLocal / HOLD;
-    } else {
-      const travelT = (sLocal - HOLD) / (1 - HOLD);
-      camX = THREE.MathUtils.lerp(BEAT_X[stageIndex], BEAT_X[stageIndex + 1], travelT);
-      revealT = 1;
-    }
-
-    camera.position.set(camX + 0.15, 1.1, 5.3);
-    camera.lookAt(camX + 0.15, 0.3, 0);
-
-    beats.forEach((b, i) => {
-      b.group.visible = Math.abs(i - stageIndex) <= 1;
-    });
-    beats[stageIndex].revealT = revealT;
-  }
-
-  const clock = new THREE.Clock();
-
-  function animate() {
-    const t = clock.getElapsedTime();
-
-    const cow = beats[0].group;
-    if (cow.userData.tail) cow.userData.tail.rotation.z = Math.sin(t * 2) * 0.18;
-    if (cow.userData.head) cow.userData.head.rotation.y = Math.sin(t * 0.8) * 0.08;
-
-    const milking = beats[1].group;
-    if (milking.userData.cow && milking.userData.cow.userData.tail) {
-      milking.userData.cow.userData.tail.rotation.z = Math.sin(t * 2.3) * 0.15;
-    }
-    const revealMilk = beats[1].revealT || 0;
-    if (milking.userData.milkFill) {
-      // Pail interior runs from y=0 to y≈0.42 (see buildMilkingScene) — cap
-      // well short of the rim so the fill never visibly overflows it.
-      const level = 0.02 + Math.min(1, revealMilk * 1.15) * 0.34;
-      milking.userData.milkFill.scale.y = level;
-      milking.userData.milkFill.position.y = milking.userData.pailBaseY + level * 0.5;
-    }
-    if (milking.userData.drops) {
-      const dropsVisible = revealMilk > 0.08 && revealMilk < 0.97;
-      milking.userData.drops.forEach((d, i) => {
-        d.visible = dropsVisible;
-        if (dropsVisible) {
-          const phase = (t * 1.8 + i * 0.27) % 1;
-          d.position.y = 0.8 - phase * 0.62;
-        }
-      });
-    }
-
-    const flight = beats[2].group;
-    if (flight.userData.plane && flight.userData.curve) {
-      const revealFlight = beats[2].revealT || 0;
-      const tt = Math.max(0.001, Math.min(1, revealFlight));
-      const pos = flight.userData.curve.getPointAt(tt);
-      const tangent = flight.userData.curve.getTangentAt(tt);
-      flight.userData.plane.position.copy(pos);
-      const lookTarget = pos.clone().add(tangent);
-      flight.userData.plane.lookAt(lookTarget);
-      flight.userData.plane.rotateY(Math.PI / 2);
-      flight.userData.plane.rotation.z += Math.sin(t * 3) * 0.05;
-    }
-
-    const blend = beats[3].group;
-    if (blend.userData.orbitGroup) {
-      blend.userData.orbitGroup.rotation.y = t * 0.6;
-    }
-
-    const finale = beats[4].group;
-    if (finale.userData.bars) {
-      finale.userData.bars.forEach((bar, i) => {
-        bar.rotation.y += 0.004 + i * 0.0008;
-        bar.position.y = Math.sin(t * 1.2 + i) * 0.04;
-      });
-    }
-
-    updateCameraAndBeats(latestProgress);
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-
-  makeScrollProgress(track, (progress) => {
-    latestProgress = progress;
-  });
-
-  requestAnimationFrame(animate);
-})();
-
-/* ---------- 3D Product Showcase ---------- */
-(function productShowcase() {
-  const section = document.getElementById("showcase");
-  const track = document.getElementById("showcaseTrack");
-  const canvas = document.getElementById("showcaseCanvas");
-  const canvasWrap = document.getElementById("showcaseCanvasWrap");
-  const fallbackImg = document.getElementById("showcaseFallbackImg");
-  const hint = document.getElementById("showcaseHint");
-  const eyebrow = document.getElementById("showcaseEyebrow");
-  const nameEl = document.getElementById("showcaseFlavorName");
-  const descEl = document.getElementById("showcaseFlavorDesc");
-  const flavorDots = Array.from(document.querySelectorAll(".showcase-flavor-dot"));
-  if (!section || !track || !canvas) return;
-
-  const FLAVORS = TIAMA_FLAVORS;
-
-  function updatePanel(index) {
-    const f = FLAVORS[index];
-    if (eyebrow) eyebrow.textContent = `THE TIAMA RANGE · ${f.label}`;
-    if (nameEl) { nameEl.textContent = f.name; nameEl.style.color = f.css; }
-    if (descEl) descEl.textContent = f.desc;
-    flavorDots.forEach((d) => d.classList.toggle("active", d.dataset.flavor === f.key));
-  }
-
-  // ---- Fallback path: reduced motion, no WebGL, or Three.js failed to load ----
-  const useStatic = useStaticLayout || !hasWebGL() || typeof THREE === "undefined";
-
-  if (useStatic) {
-    section.classList.add("showcase--static");
-    canvas.hidden = true;
-    if (fallbackImg) fallbackImg.hidden = false;
-
-    let current = 0;
-    updatePanel(current);
-    flavorDots.forEach((btn, i) => {
-      btn.addEventListener("click", () => {
-        current = i;
-        updatePanel(current);
-      });
-    });
-    return;
-  }
-
-  // ---- Full 3D path ----
-  let scene, camera, renderer, spinGroup, light1, light2;
-  let currentFlavor = 0;
-  let needsRender = true;
-  const BAR_OPTS = { rx: 1.05, ry: 0.55, depth: 0.5, bevel: 0.16 };
-
-  function applyFlavor(index) {
-    currentFlavor = index;
-    const f = FLAVORS[index];
-    if (spinGroup) {
-      while (spinGroup.children.length) spinGroup.remove(spinGroup.children[0]);
-      spinGroup.add(buildSoapBar(f, BAR_OPTS));
-    }
-    updatePanel(index);
-    needsRender = true;
-  }
-
-  function initScene() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-    camera.position.set(0, 0, 4.2);
-
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-    spinGroup = new THREE.Group();
-    spinGroup.add(buildSoapBar(FLAVORS[0], BAR_OPTS));
-    scene.add(spinGroup);
-
-    light1 = new THREE.DirectionalLight(0xffffff, 0.95);
-    light1.position.set(2, 2.5, 3);
-    scene.add(light1);
-    light2 = new THREE.DirectionalLight(0xffffff, 0.35);
-    light2.position.set(-3, -1, 2);
-    scene.add(light2);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-
-    resize();
-    window.addEventListener("resize", () => {
-      resize();
-      needsRender = true;
+  if (pick){
+    const r = pick.r;
+    const prog = clamp((mid - r.top) / Math.max(1, r.height), 0, 1);
+    let vis = smooth(1.6 - (pickD/(vh*0.9))*1.4);
+    if (best && best.dataset.model === "none") vis = 0;   /* text-only plates get the stage to themselves */
+    if (vis > 0.01) active.push({
+      model: pick.s.dataset.model, prog, vis,
+      /* a stage may ask for the scene to sit lower on narrow screens, where
+         its copy needs the top of the viewport (the hero does) */
+      cyNarrow: parseFloat(pick.s.dataset.cyNarrow) || 0
     });
   }
-
-  function resize() {
-    const w = canvasWrap.clientWidth || 1;
-    const h = canvasWrap.clientHeight || 1;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
+  if (best){
+    railNum.textContent  = best.dataset.num  || "";
+    railName.textContent = best.dataset.name || "";
   }
+  railBar.style.right = (100 - arcP*100).toFixed(1) + "%";
+  rail.style.opacity = arcP < 0.012 ? "0" : "1";
+  needsDraw = true;
+}
 
-  function renderLoop() {
-    if (needsRender) {
-      renderer.render(scene, camera);
-      needsRender = false;
-    }
-    requestAnimationFrame(renderLoop);
+function draw(){
+  const light = lightAt(arcP);
+  ctx.fillStyle = rgb(light.bg);
+  ctx.fillRect(0,0,W,H);
+
+  const narrow = W < 820;
+  const cx = narrow ? W*0.5  : W*0.68;
+  const dist = narrow ? 580 : 350;
+  const baseCy = narrow ? 0.24 : 0.50;
+
+  /* a soft pool of light under the scene */
+  const poolY = H*baseCy + 60;
+  const pool = ctx.createRadialGradient(cx, poolY, 10, cx, poolY, Math.max(W,H)*0.55);
+  pool.addColorStop(0, "rgba(255,250,240,0.22)");
+  pool.addColorStop(1, "rgba(255,250,240,0)");
+  ctx.fillStyle = pool; ctx.fillRect(0,0,W,H);
+
+  for (const a of active){
+    const m = BUILT[a.model];
+    if (!m || a.vis < 0.012) continue;
+    const cy = H * ((narrow && a.cyNarrow) ? a.cyNarrow : baseCy);
+    /* Under prefers-reduced-motion the scenes still draw, but they hold a
+       fixed three-quarter angle instead of turning with the scroll. */
+    const t = reduce.matches ? 0.5 : a.prog;
+    const yaw = m.spin.bias + t*m.spin.span;
+    const pitch = 0.38 - 0.07*Math.cos(t*Math.PI*2);
+    const k = FOCAL/dist;
+    contactShadow(cx, cy + m.height*0.46*Math.cos(pitch)*k, m.radius*1.05*k, a.vis, light);
+    drawModel(m, {yaw, pitch, cx, cy, dist, alpha:a.vis, light});
   }
+}
 
-  try {
-    initScene();
-  } catch (e) {
-    // WebGL context creation or Three.js init failed at runtime — degrade gracefully.
-    section.classList.add("showcase--static");
-    canvas.hidden = true;
-    if (fallbackImg) fallbackImg.hidden = false;
-    updatePanel(0);
-    flavorDots.forEach((btn, i) => {
-      btn.addEventListener("click", () => updatePanel(i));
-    });
-    return;
+function frame(){
+  if (needsDraw){ draw(); needsDraw = false; }
+  requestAnimationFrame(frame);
+}
+
+/* ============================ flavour plate ============================ */
+const FLAVOURS = [
+  {n:"Blueberry",  s:"Fresh reset",     c:"#485CC4", d:"A bright, juicy mood for energetic mornings."},
+  {n:"Goji Berry", s:"Warm glow",       c:"#E26E3A", d:"A warm, grounding mood for slow evenings."},
+  {n:"Acai Berry", s:"Deep indulgence", c:"#8C2C60", d:"A rich, indulgent mood for a proper reset."}
+];
+const flavEl = document.getElementById("flavours");
+if (flavEl){
+  for (const f of FLAVOURS){
+    const d = document.createElement("div"); d.className = "flav";
+    const chip = document.createElement("div"); chip.className = "chip";
+    chip.style.background = f.c;
+    const b = document.createElement("b"); b.textContent = f.n;
+    const s = document.createElement("span"); s.textContent = f.s;
+    const p = document.createElement("p"); p.textContent = f.d;
+    d.append(chip, b, s, p); flavEl.append(d);
   }
+}
 
-  updatePanel(0);
-  requestAnimationFrame(renderLoop);
-
-  // Re-draw the label texture once the display font has actually loaded,
-  // so the "TIAMA" wordmark on the bar isn't stuck on the canvas fallback font.
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => {
-      applyFlavor(currentFlavor);
-    });
-  }
-
-  makeScrollProgress(track, (progress) => {
-    spinGroup.rotation.y = progress * Math.PI * 4;
-    spinGroup.rotation.x = Math.sin(progress * Math.PI * 2) * 0.1;
-    needsRender = true;
-
-    const stopIndex = Math.min(FLAVORS.length - 1, Math.floor(progress * FLAVORS.length));
-    if (stopIndex !== currentFlavor) applyFlavor(stopIndex);
-
-    if (hint) hint.classList.toggle("hidden", progress > 0.04);
-  });
-
-  // Manual override: clicking a flavor dot jumps the bar straight to that
-  // flavor without waiting for the next scroll-driven update.
-  flavorDots.forEach((btn, i) => {
-    btn.addEventListener("click", () => applyFlavor(i));
-  });
-})();
-
-/* ---------- Nav shrink on scroll (subtle, single deliberate touch) ---------- */
-(function navShadow() {
-  const nav = document.querySelector(".nav");
-  if (!nav) return;
-  window.addEventListener("scroll", () => {
-    nav.style.boxShadow = window.scrollY > 8 ? "0 8px 24px -18px rgba(43,28,43,0.4)" : "none";
-  });
-})();
-
-/* ---------- Mobile nav toggle (hamburger menu below the 860px breakpoint) ---------- */
-(function mobileNav() {
-  const toggle = document.getElementById("navToggle");
-  const links = document.getElementById("navLinks");
-  if (!toggle || !links) return;
-
-  function closeMenu() {
-    links.classList.remove("open");
-    toggle.setAttribute("aria-expanded", "false");
-  }
-  function openMenu() {
-    links.classList.add("open");
-    toggle.setAttribute("aria-expanded", "true");
-  }
-
-  toggle.addEventListener("click", () => {
-    if (links.classList.contains("open")) closeMenu();
-    else openMenu();
-  });
-
-  // Tapping a link (including the in-menu CTA) jumps the page, so close the menu too.
-  links.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeMenu));
-
-  // Tapping outside the open menu closes it.
-  document.addEventListener("click", (e) => {
-    if (!links.classList.contains("open")) return;
-    if (links.contains(e.target) || toggle.contains(e.target)) return;
-    closeMenu();
-  });
-
-  // Escape key closes it.
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeMenu();
-  });
-
-  // Rotating a phone to landscape or resizing past the breakpoint shouldn't
-  // leave the dropdown stuck open with no toggle visible to close it.
-  window.addEventListener("resize", () => {
-    if (window.innerWidth >= 860) closeMenu();
-  });
-})();
-
-/* ---------- Hero 3D visual (three rotating oval bars) ----------
-   Opens the site with the product itself, in 3D, before the scroll story
-   begins. Falls back to the flat product photo under reduced motion, no
-   WebGL, or narrow viewports — same pattern as the journey and showcase. */
-(function heroShowcase() {
-  const canvas = document.getElementById("heroCanvas");
-  const canvasWrap = document.getElementById("heroCanvasWrap");
-  const fallbackImg = document.getElementById("heroFallbackImg");
-  if (!canvas || !canvasWrap) return;
-
-  const useStatic = useStaticLayout || !hasWebGL() || typeof THREE === "undefined";
-
-  if (useStatic) {
-    canvas.hidden = true;
-    if (fallbackImg) fallbackImg.hidden = false;
-    return;
-  }
-
-  let scene, camera, renderer;
-  const bars = [];
-
-  try {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    camera.position.set(0, 1.5, 5.7);
-    camera.lookAt(0, -0.05, 0);
-
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-    const light1 = new THREE.DirectionalLight(0xffffff, 1.05);
-    light1.position.set(2.5, 3, 3);
-    scene.add(light1);
-    const light2 = new THREE.DirectionalLight(0xffffff, 0.4);
-    light2.position.set(-3, -1, 2);
-    scene.add(light2);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-    TIAMA_FLAVORS.forEach((f, i) => {
-      const bar = buildSoapBar(f, { rx: 0.95, ry: 0.5, depth: 0.46, bevel: 0.15 });
-      const offset = (i - 1) * 1.55;
-      bar.position.set(offset, -Math.abs(i - 1) * 0.1, -Math.abs(i - 1) * 0.3);
-      bar.rotation.y = (i - 1) * 0.22;
-      bar.scale.setScalar(i === 1 ? 1 : 0.86);
-      scene.add(bar);
-      bars.push(bar);
-    });
-
-    function resize() {
-      const w = canvasWrap.clientWidth || 1;
-      const h = canvasWrap.clientHeight || 1;
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-    }
-    resize();
-    window.addEventListener("resize", resize);
-  } catch (e) {
-    canvas.hidden = true;
-    if (fallbackImg) fallbackImg.hidden = false;
-    return;
-  }
-
-  const clock = new THREE.Clock();
-  function animate() {
-    const t = clock.getElapsedTime();
-    bars.forEach((bar, i) => {
-      bar.rotation.y += 0.003 + i * 0.0006;
-      bar.position.y = -Math.abs(i - 1) * 0.1 + Math.sin(t * 1.1 + i * 1.4) * 0.05;
-    });
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  requestAnimationFrame(animate);
+addEventListener("resize", () => { resize(); readScroll(); }, {passive:true});
+addEventListener("scroll", readScroll, {passive:true});
+resize(); readScroll(); draw();
+requestAnimationFrame(frame);
 })();

@@ -1,70 +1,77 @@
 # Discover Tiama
 
-A single-page, framework-free site (plain HTML/CSS/JS — no build step, no npm install)
-for the Tiama Moisturizing Bars academic case. Recreated as a portable static site so it
-can be hosted permanently, for free, without depending on any third-party platform.
+A single-page, framework-free site (plain HTML/CSS/JS — no build step, no npm install,
+no libraries at all) for the Tiama Moisturizing Bars academic case.
 
-The whole page is a piece of 3D storytelling: it opens on the soap itself, then scrolls
-through where the ingredient comes from (Hokkaido, Japan), how it's milked, how it's
-flown to India, how it's blended with fruit, and how it becomes the bar you hold — before
-the celebrity/influencer section and the flavour + pricing showcase.
+The whole page is one continuous scrolling story. A single full-screen 3D scene sits
+fixed behind the page while editorial "plates" of copy scroll over it, and the light
+shifts as you go — from the brand's own warm ivory, to the cold blue of a Hokkaido
+morning, up to altitude, into the warm gold of arrival in India, through the berry
+blend, and out to a deep plum close.
 
 ## Files
 
 - `index.html` — all page content and structure
-- `style.css` — design system (colors, type, layout)
-- `script.js` — interactivity: the 3D hero, the scroll-driven "Milk Journey" story, the
-  3D product showcase, the bath mood mixer, mood tabs, pack picker, and quiz
-- `assets/three.min.js` — Three.js r160, self-hosted (see "3D graphics" below)
-- `assets/tiama-hero.jpg` — product shot (fallback image for the hero and showcase)
+- `style.css` — design system (colour, type, plates, layout)
+- `script.js` — the 3D renderer, the models, the light arc and the scroll wiring
 - `assets/influencer.jpg` — proposed campaign visual (academic concept section)
+- `assets/tiama-hero.jpg` — product shot (kept for reference; not used by the page)
 
-## 3D graphics
+## The chapters
 
-Three sections use real, interactive 3D (built with **Three.js**, WebGL), not flat
-illustrations or photos:
+| # | Chapter | Scene |
+|---|---------|-------|
+| 00 | Milk. Berries. Young at Heart. | the oval Tiama bar |
+| 01 | Hokkaido, Japan | a cow on open pasture |
+| 02 | An exceptionally rich milk | the milking — pail, stool, milk |
+| 03 | Brought to India — a first | an airliner between two coasts |
+| 04 | Blended with real berries | a milk jug and the three berries |
+| 05 | Milled, cut, and ready | the three finished bars |
+| 06 | Same milk story. Different energy. | the three flavours |
+| 07 | What's inside the Tiama story? | the 10-second decode |
+| 08 | Young at Heart, brought to life. | the proposed campaign visual |
+| 09 | Start small. Feel the difference. | pricing — ₹49 trial, ₹92 full size |
+| 10 | In one line | the close |
 
-- **Hero** — three oval Tiama bars (one per flavour), gently rotating, the very first
-  thing visitors see: "Tiama the soap."
-- **The Milk Journey** — a pinned, scroll-scrubbed 3D scene that tells the ingredient
-  story as you scroll: a low-poly cow grazing in Hokkaido → the cow being milked into a
-  pail → an airplane flying a curved path from Japan to India → the milk blending with
-  three real berries → milled and cut into the three finished, oval bars. The camera
-  travels between five 3D "beats" in sync with the scroll position and the stage copy
-  on the right.
-- **Product showcase** — each flavour's bar, modeled as a proper oval/lozenge shape
-  (extruded and bevelled, not a sphere), rotating as you scroll and swapping colour,
-  copy and pricing per flavour.
+## How the 3D works
 
-**Dependency:** Three.js is **self-hosted** in `assets/three.min.js` — it is not loaded
-from a CDN. This means the 3D content works fully offline once the page is downloaded;
-there is nothing to fetch from a third party and nothing that can break if a CDN goes
-down.
+There is **no Three.js and no WebGL**. The 3D is a small software renderer (about 120
+lines) drawing into a normal 2D canvas:
 
-**Graceful fallback:** if WebGL isn't supported, the visitor has `prefers-reduced-motion`
-set, the viewport is ≤ 860px wide, or anything about the 3D setup throws an error, each
-of the three sections automatically falls back to a static version — flat illustrations
-for the Milk Journey, and a static product photo for the hero and showcase — with all the
-same copy, pricing and flavour-switching controls. Nothing breaks or shows blank.
+- Models are built from primitives — boxes, rotated boxes, cylinders, balls, and an
+  `oval()` lozenge that makes the Tiama bar's pillowed shape.
+- Each model is auto-fitted: centred, sat on the ground, and scaled to one common size.
+- Faces are projected by hand, sorted back-to-front (painter's algorithm), flat-shaded
+  against a fixed light direction, and filled with a matching stroke to close seams.
+  Curved surfaces stroke in their own fill colour so no wireframe grid shows; flat-sided
+  pieces keep a darker edge, which is what gives them their drawn look.
+- Ground discs are forced to the back of the sort, since one big flat quad would
+  otherwise paint over the objects standing on it.
+- As a chapter scrolls through the middle of the screen its model fades in and turns.
+  Scenes that need a specific read (the milking, the plane) turn through a narrower arc
+  so nothing important hides behind anything else.
+
+Because it's plain canvas 2D, it works without WebGL, needs no GPU, has nothing to
+download, and behaves the same everywhere.
 
 ## Mobile
 
-The whole page is responsive down to small phones (~375px wide) as well as tablets,
-while keeping the original layout on laptop/desktop widths:
+**The 3D runs on phones too** — it isn't switched off, just rearranged. Below 820px the
+scene moves to the top of the screen and the plate pins underneath it, so the two never
+overlap, and the model still turns as you scroll. Tested down to 390px wide with no
+horizontal scrolling.
 
-- Below 860px wide, the top nav collapses into a hamburger menu (tap to open a
-  dropdown with all section links plus the "Find my Tiama" button). Above 860px it's
-  the original full horizontal nav bar — nothing changed there.
-- Below 860px, all three 3D sections (hero, Milk Journey, showcase) automatically
-  switch to their static fallback described above, so nothing gets clipped inside a
-  fixed-height section or asks a phone to render a heavy WebGL scene.
+## Reduced motion
+
+With `prefers-reduced-motion: reduce`, the scenes still draw — they just hold a fixed
+three-quarter angle instead of turning with the scroll, and smooth scrolling and the
+scroll-cue animation are switched off. Nothing is hidden; nothing moves.
 
 ## Swapping images later
 
-To replace either photo, just overwrite the file in `assets/` with a new one of the
-same name — `index.html` already points at both, so no code changes are needed as
-long as the filename stays the same. If you rename a file, update the matching
-`src="assets/..."` in `index.html` to match.
+To replace the campaign photo, overwrite `assets/influencer.jpg` with a new file of the
+same name — `index.html` already points at it, so no code changes are needed. If you
+rename it, update the matching `src="assets/..."` in `index.html`.
 
 ## Deploy to GitHub Pages (free, permanent, no billing risk)
 
@@ -86,7 +93,5 @@ No build step needed. Either:
 - Run a tiny local server from this folder: `python3 -m http.server 8000` and visit
   `http://localhost:8000`.
 
-Note: opening via `file://` (double-click) can occasionally block Three.js's module
-loading in some browsers' stricter security settings — if the 3D scenes don't appear
-that way but the rest of the page looks fine, use the local server method instead, or
-just try the real deployed GitHub Pages link.
+The only thing fetched from the internet is the web fonts (Google Fonts). If they're
+blocked the page falls back to system fonts and everything else still works.
