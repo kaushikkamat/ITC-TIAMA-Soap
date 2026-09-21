@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Discover Tiama</title>
+<meta name="description" content="A playful moisturizing journey with Japanese Bokkaido Milk." />
+
+<meta property="og:title" content="Discover Tiama" />
+<meta property="og:description" content="A playful moisturizing journey with Japanese Bokkaido Milk." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Discover Tiama" />
+<meta name="twitter:description" content="A playful moisturizing journey with Japanese Bokkaido Milk." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="logo">TIA<span>MA</span></a>
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="navLinks">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#journey">The Milk Journey</a></li>
+      <li><a href="#decode">Why Tiama?</a></li>
+      <li><a href="#influencer">Young at Heart</a></li>
+      <li><a href="#mood">Find your mood</a></li>
+      <li><a href="#showcase">See it in 3D</a></li>
+      <li><a href="#quiz">Play &amp; learn</a></li>
+      <li class="nav-links-cta"><a href="#pack" class="btn btn-primary" style="padding:10px 20px; font-size:14px;">Find my Tiama</a></li>
+    </ul>
+    <a href="#pack" class="btn btn-primary nav-cta" style="padding:10px 20px; font-size:14px;">Find my Tiama</a>
+  </div>
+</nav>
+
+<header id="top" class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill"><span class="dot"></span>NEW &nbsp;Your bath just got a plot twist.</span>
+      <h1 class="h1">Milk. Berries.<br><em>Young at Heart.</em></h1>
+      <p class="lede hero-lede">Meet Tiama Moisturizing Bars with Japanese Bokkaido Milk — a playful way to turn everyday cleansing into a softer, more sensorial ritual.</p>
+      <div class="hero-actions">
+        <a href="#mood" class="btn btn-primary">Find my Tiama</a>
+        <span class="tap-note">Tap for a milk splash 🥛</span>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>Bokkaido</b>Japanese Milk</div>
+        <div class="hero-stat"><b>3</b>fruity moods</div>
+        <div class="hero-stat"><b>₹49</b>trial from</div>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="blob"></div>
+      <div class="hero-canvas-wrap" id="heroCanvasWrap">
+        <canvas id="heroCanvas"></canvas>
+        <img class="hero-photo hero-fallback-img" id="heroFallbackImg" src="assets/tiama-hero.jpg" alt="Three pastel Tiama moisturizing bars with matching cartons and berry accents" hidden />
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>MOISTURIZING</span><span class="accent">✦</span>
+    <span>GENTLE</span><span class="accent">✦</span>
+    <span>INDULGENT</span><span class="accent">✦</span>
+    <span>YOUNG AT HEART</span><span class="accent">✦</span>
+    <span>MOISTURIZING</span><span class="accent">✦</span>
+    <span>GENTLE</span><span class="accent">✦</span>
+    <span>MOISTURIZING</span><span class="accent">✦</span>
+    <span>GENTLE</span><span class="accent">✦</span>
+    <span>INDULGENT</span><span class="accent">✦</span>
+    <span>YOUNG AT HEART</span><span class="accent">✦</span>
+    <span>MOISTURIZING</span><span class="accent">✦</span>
+    <span>GENTLE</span><span class="accent">✦</span>
+  </div>
+</div>
+
+<section id="journey" class="journey">
+  <div class="journey-track" id="journeyTrack">
+    <div class="journey-pin">
+      <div class="wrap journey-layout">
+        <div class="journey-visual-col">
+          <div class="journey-canvas-wrap" id="journeyCanvasWrap">
+            <canvas id="journeyCanvas"></canvas>
+          </div>
+        </div>
+        <div class="journey-copy-col">
+        <div class="journey-rail" id="journeyRail" aria-hidden="true">
+          <span class="journey-dot active" data-dot="0"></span>
+          <span class="journey-dot" data-dot="1"></span>
+          <span class="journey-dot" data-dot="2"></span>
+          <span class="journey-dot" data-dot="3"></span>
+          <span class="journey-dot" data-dot="4"></span>
+        </div>
+
+        <div class="journey-stage active" data-stage="0">
+          <div class="journey-visual">
+            <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of a grazing cow in the pastures of Hokkaido, Japan">
+              <circle cx="160" cy="160" r="150" fill="#33223a"/>
+              <circle cx="236" cy="66" r="18" fill="#fbf1e6" opacity="0.14"/>
+              <circle cx="254" cy="72" r="12" fill="#fbf1e6" opacity="0.14"/>
+              <circle cx="60" cy="56" r="10" fill="#fbf1e6" opacity="0.1"/>
+              <path d="M0 150 C 60 118, 110 136, 160 122 C 210 108, 260 130, 320 112 L320 320 L0 320 Z" fill="#6E8F72" opacity="0.5"/>
+              <path d="M0 188 C 70 160, 130 178, 190 162 C 240 148, 280 168, 320 152 L320 320 L0 320 Z" fill="#9CBBA0" opacity="0.65"/>
+              <g transform="translate(88,150) scale(1.55)">
+                <ellipse cx="46" cy="52" rx="52" ry="34" fill="#fbf1e6"/>
+                <ellipse cx="24" cy="40" rx="12" ry="9" fill="#2b1c2b"/>
+                <ellipse cx="62" cy="60" rx="10" ry="8" fill="#2b1c2b"/>
+                <ellipse cx="46" cy="70" rx="14" ry="7" fill="#fbf1e6"/>
+                <circle cx="92" cy="32" r="18" fill="#fbf1e6"/>
+                <ellipse cx="86" cy="20" rx="5" ry="7" fill="#fbf1e6"/>
+                <ellipse cx="100" cy="20" rx="5" ry="7" fill="#fbf1e6"/>
+                <ellipse cx="86" cy="20" rx="2.4" ry="3.4" fill="#2b1c2b"/>
+                <ellipse cx="100" cy="20" rx="2.4" ry="3.4" fill="#2b1c2b"/>
+                <circle cx="87" cy="33" r="1.8" fill="#2b1c2b"/>
+                <circle cx="97" cy="33" r="1.8" fill="#2b1c2b"/>
+                <ellipse cx="92" cy="42" rx="7" ry="4.5" fill="#e8b7a3"/>
+                <rect x="10" y="76" width="7" height="18" rx="3.5" fill="#fbf1e6"/>
+                <rect x="30" y="80" width="7" height="16" rx="3.5" fill="#fbf1e6"/>
+                <rect x="58" y="80" width="7" height="16" rx="3.5" fill="#fbf1e6"/>
+                <rect x="74" y="76" width="7" height="18" rx="3.5" fill="#fbf1e6"/>
+              </g>
+            </svg>
+          </div>
+          <div class="journey-copy">
+            <p class="journey-eyebrow">THE MILK JOURNEY · 01</p>
+            <h3>Hokkaido, Japan</h3>
+            <p>Grass-fed cows, clean northern air and untouched pasture — where Tiama's ingredient story quietly begins.</p>
+            <span class="journey-tag">THE ORIGIN</span>
+          </div>
+        </div>
+
+        <div class="journey-stage" data-stage="1">
+          <div class="journey-visual">
+            <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of a rich milk droplet with ripples">
+              <circle cx="160" cy="160" r="150" fill="#33223a"/>
+              <circle cx="160" cy="200" r="96" fill="none" stroke="#fbf1e6" stroke-opacity="0.14" stroke-width="2"/>
+              <circle cx="160" cy="200" r="128" fill="none" stroke="#fbf1e6" stroke-opacity="0.08" stroke-width="2"/>
+              <path d="M160 60 C 130 120, 96 158, 96 198 C 96 242, 126 268, 160 268 C 194 268, 224 242, 224 198 C 224 158, 190 120, 160 60 Z" fill="#fbf1e6"/>
+              <ellipse cx="138" cy="188" rx="14" ry="22" fill="#ffffff" opacity="0.55"/>
+              <circle cx="120" cy="150" r="7" fill="#ffe9dd"/>
+              <circle cx="204" cy="176" r="5" fill="#e8e9fb"/>
+            </svg>
+          </div>
+          <div class="journey-copy">
+            <p class="journey-eyebrow">THE MILK JOURNEY · 02</p>
+            <h3>An exceptionally rich milk</h3>
+            <p>Higher in fat and protein than ordinary milk, with a naturally soft, near-vanilla texture — built for real moisturization, not just fragrance.</p>
+            <span class="journey-tag">THE INGREDIENT</span>
+          </div>
+        </div>
+
+        <div class="journey-stage" data-stage="2">
+          <div class="journey-visual">
+            <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of a journey from Japan to India">
+              <circle cx="160" cy="160" r="150" fill="#33223a"/>
+              <path d="M210 70 C 232 66, 252 78, 250 100 C 248 120, 224 128, 208 116 C 194 106, 190 78, 210 70 Z" fill="#fbf1e6" opacity="0.16"/>
+              <path d="M64 168 C 96 150, 138 156, 156 184 C 176 214, 156 252, 116 258 C 80 264, 46 240, 48 206 C 49 190, 54 176, 64 168 Z" fill="#fbf1e6" opacity="0.16"/>
+              <path d="M222 96 C 180 118, 130 160, 96 206" stroke="#ff7a45" stroke-width="2.5" stroke-dasharray="6 8" fill="none" stroke-linecap="round"/>
+              <circle cx="222" cy="96" r="5" fill="#ff7a45"/>
+              <circle cx="96" cy="206" r="6" fill="#ff7a45"/>
+              <g transform="translate(150,138) rotate(-32)">
+                <path d="M0 0 L18 4 L0 8 L4 4 Z" fill="#fbf1e6"/>
+              </g>
+              <circle cx="250" cy="200" r="2.5" fill="#fbf1e6" opacity="0.5"/>
+              <circle cx="70" cy="90" r="2" fill="#fbf1e6" opacity="0.4"/>
+              <circle cx="230" cy="240" r="2" fill="#fbf1e6" opacity="0.4"/>
+            </svg>
+          </div>
+          <div class="journey-copy">
+            <p class="journey-eyebrow">THE MILK JOURNEY · 03</p>
+            <h3>Brought to India — a first</h3>
+            <p>Tiama became the first brand to bring Bokkaido milk into a soap bar, importing the real ingredient rather than a synthetic stand-in.</p>
+            <span class="journey-tag">THE FIRST</span>
+          </div>
+        </div>
+
+        <div class="journey-stage" data-stage="3">
+          <div class="journey-visual">
+            <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of milk blending with three berries">
+              <circle cx="160" cy="160" r="150" fill="#33223a"/>
+              <circle cx="160" cy="168" r="70" fill="#fbf1e6" opacity="0.14"/>
+              <circle cx="128" cy="140" r="46" fill="#4b56c9" opacity="0.85"/>
+              <circle cx="188" cy="132" r="40" fill="#ff7a45" opacity="0.85"/>
+              <circle cx="160" cy="190" r="44" fill="#a53d78" opacity="0.85"/>
+            </svg>
+          </div>
+          <div class="journey-copy">
+            <p class="journey-eyebrow">THE MILK JOURNEY · 04</p>
+            <h3>Blended with real berries</h3>
+            <p>The rich milk base is worked with three fruity moods — Blueberry, Goji Berry, Acai — each lending its own colour, scent and personality.</p>
+            <span class="journey-tag">THE BLEND</span>
+          </div>
+        </div>
+
+        <div class="journey-stage" data-stage="4">
+          <div class="journey-visual">
+            <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of three finished Tiama soap bars">
+              <circle cx="160" cy="160" r="150" fill="#33223a"/>
+              <g transform="translate(48,110) rotate(-8)">
+                <rect x="0" y="0" width="72" height="102" rx="20" fill="#e8e9fb"/>
+                <text x="36" y="58" text-anchor="middle" font-family="Georgia, serif" font-size="10" fill="#4b56c9" font-weight="700">TIAMA</text>
+              </g>
+              <g transform="translate(124,92)">
+                <rect x="0" y="0" width="78" height="112" rx="22" fill="#ffe9dd"/>
+                <text x="39" y="62" text-anchor="middle" font-family="Georgia, serif" font-size="10" fill="#ff7a45" font-weight="700">TIAMA</text>
+              </g>
+              <g transform="translate(204,112) rotate(7)">
+                <rect x="0" y="0" width="70" height="100" rx="20" fill="#f6e3ee"/>
+                <text x="35" y="56" text-anchor="middle" font-family="Georgia, serif" font-size="10" fill="#a53d78" font-weight="700">TIAMA</text>
+              </g>
+            </svg>
+          </div>
+          <div class="journey-copy">
+            <p class="journey-eyebrow">THE MILK JOURNEY · 05</p>
+            <h3>Milled, cut, and ready</h3>
+            <p>The blend is milled and shaped into the bar you'll hold — Tiama Moisturizing Bars, ready for your everyday ritual.</p>
+            <span class="journey-tag">THE RESULT</span>
+          </div>
+        </div>
+
+        </div>
+        <div class="journey-hint" id="journeyHint"><span class="arrow">↓</span> Keep scrolling</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="influencer" class="influencer">
+  <div class="wrap influencer-grid">
+    <div class="portrait-frame">
+      <img src="assets/influencer.jpg" alt="Proposed campaign visual for Tiama — academic concept only" />
+    </div>
+    <div>
+      <div class="tag-row">
+        <span class="tag tag-proposed">Proposed influencer fit</span>
+        <span class="tag tag-academic">Academic concept</span>
+      </div>
+      <h2 class="h2">Young at Heart,<br><em style="font-style:italic; color:var(--acai);">brought to life.</em></h2>
+      <p class="lede" style="margin-top:18px;">Sara Ali Khan is proposed as a creative fit for Tiama's youthful, expressive and mass-premium personality — making everyday moisturization feel playful and culturally relevant.</p>
+      <div class="trait-row">
+        <div class="trait"><b>01</b><span>Youthful relevance</span></div>
+        <div class="trait"><b>02</b><span>Expressive personality</span></div>
+        <div class="trait"><b>03</b><span>Premium with fun</span></div>
+      </div>
+      <p class="disclaimer">Campaign visualization for an academic case only. Sara Ali Khan is not represented as endorsing or being associated with Tiama.</p>
+    </div>
+  </div>
+</section>
+
+<section id="decode">
+  <div class="wrap">
+    <div class="decode-head">
+      <p class="eyebrow">THE 10-SECOND DECODE</p>
+      <h2 class="h2" style="margin-top:10px;">What's inside the Tiama story?</h2>
+      <p class="lede" style="margin-top:12px;">No science lecture. Just the three things worth remembering.</p>
+    </div>
+    <div class="decode-list">
+      <div class="decode-item">
+        <div class="decode-num">01</div>
+        <div class="decode-glyph">ボッカイドウ</div>
+        <h3 class="h3">Japanese Bokkaido Milk</h3>
+        <p class="small">The distinctive ingredient at the heart of Tiama's moisturizing story.</p>
+        <span class="decode-tag">THE HERO</span>
+      </div>
+      <div class="decode-item">
+        <div class="decode-num">02</div>
+        <div class="decode-glyph">♡</div>
+        <h3 class="h3">Everyday moisturization</h3>
+        <p class="small">A bath proposition designed to feel more caring than basic cleansing.</p>
+        <span class="decode-tag">THE BENEFIT</span>
+      </div>
+      <div class="decode-item">
+        <div class="decode-num">03</div>
+        <div class="decode-glyph">✦</div>
+        <h3 class="h3">Sensorial ritual</h3>
+        <p class="small">Colour, fragrance and lather come together to make an ordinary bath feel special.</p>
+        <span class="decode-tag">THE FEELING</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mixer">
+  <div class="wrap">
+    <p class="eyebrow">BATH MOOD MIXER</p>
+    <h2 class="h2" style="margin-top:10px; margin-bottom:36px;">Soft everyday reset.</h2>
+    <div class="mixer-card">
+      <div>
+        <p class="lede" style="max-width:none;">Slide from "get clean" to "make it a moment."</p>
+        <div class="mixer-row">
+          <span>Quick</span>
+          <input type="range" id="mixerRange" min="0" max="100" value="30" />
+          <span>Indulgent</span>
+        </div>
+        <p class="mixer-readout" id="mixerReadout">Soft everyday reset</p>
+      </div>
+      <div class="mixer-visual">
+        <svg id="mixerSvg" viewBox="0 0 200 200" width="70%">
+          <circle cx="100" cy="100" r="70" fill="#e8e9fb" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mood">
+  <div class="wrap">
+    <p class="eyebrow">CHOOSE YOUR BATH MOOD</p>
+    <h2 class="h2" style="margin-top:10px; margin-bottom:8px;">Same milk story.<br>Different energy.</h2>
+    <div class="mood-tabs" style="margin-top:30px;">
+      <button class="mood-tab active" data-mood="blueberry">Blueberry</button>
+      <button class="mood-tab" data-mood="goji">Goji Berry</button>
+      <button class="mood-tab" data-mood="acai">Acai Berry</button>
+    </div>
+    <div class="mood-panel">
+      <div class="mood-swatch" id="moodSwatch" style="background:var(--blueberry-soft);"></div>
+      <div>
+        <p class="mood-eyebrow" id="moodEyebrow" style="color:var(--blueberry);">01 &nbsp;BLUEBERRY &nbsp;·&nbsp; YOUR MOOD</p>
+        <h3 id="moodTitle">Fresh reset</h3>
+        <p id="moodDesc">A bright, juicy mood for energetic mornings.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pack">
+  <div class="wrap">
+    <p class="eyebrow">ONE QUESTION. ONE EASY PICK.</p>
+    <h2 class="h2" style="margin-top:10px; margin-bottom:36px;">How ready are you for Tiama?</h2>
+    <div class="picker-grid">
+      <button class="picker-btn active" data-pack="curious">
+        <b>01 &nbsp;I'm curious</b>
+        <span>Let me try it first</span>
+      </button>
+      <button class="picker-btn" data-pack="convinced">
+        <b>02 &nbsp;I'm convinced</b>
+        <span>Give me the full bar</span>
+      </button>
+    </div>
+    <div class="pack-result">
+      <div style="font-size:34px;">🥛</div>
+      <div>
+        <p class="pack-badge" id="packBadge">BEST FOR TRIAL · FIRST-DATE ENERGY</p>
+        <p class="pack-size" id="packSize">50 g</p>
+        <p class="pack-note" id="packNote">A small commitment with the full Tiama mood. Low entry price · easy first experience.</p>
+      </div>
+      <div class="pack-price">
+        <span>TRIAL PRICE</span>
+        <span id="packPrice" style="font-family:var(--display); font-size:38px; color:var(--milk);">₹49</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="showcase" class="showcase">
+  <div class="showcase-track" id="showcaseTrack">
+    <div class="showcase-pin">
+      <div class="wrap showcase-grid">
+        <div>
+          <p class="eyebrow" id="showcaseEyebrow">THE TIAMA RANGE · 01</p>
+          <h2 class="h2" id="showcaseFlavorName" style="margin-top:10px;">Blueberry</h2>
+          <p class="lede" id="showcaseFlavorDesc" style="margin-top:12px;">A bright, juicy mood for energetic mornings.</p>
+
+          <div class="showcase-price-row">
+            <div class="showcase-price-card">
+              <span>TRIAL</span>
+              <b>50 g</b>
+              <em>₹49</em>
+            </div>
+            <div class="showcase-price-card">
+              <span>FULL SIZE</span>
+              <b>125 g</b>
+              <em>₹92</em>
+            </div>
+          </div>
+
+          <div class="showcase-flavor-tabs" id="showcaseFlavorTabs">
+            <button class="showcase-flavor-dot active" data-flavor="blueberry" aria-label="Blueberry" style="background:#4b56c9;"></button>
+            <button class="showcase-flavor-dot" data-flavor="goji" aria-label="Goji Berry" style="background:#ff7a45;"></button>
+            <button class="showcase-flavor-dot" data-flavor="acai" aria-label="Acai Berry" style="background:#a53d78;"></button>
+          </div>
+        </div>
+
+        <div class="showcase-canvas-wrap" id="showcaseCanvasWrap">
+          <canvas id="showcaseCanvas" aria-hidden="true"></canvas>
+          <img id="showcaseFallbackImg" class="showcase-fallback-img" src="assets/tiama-hero.jpg" alt="Tiama Moisturizing Bars — Blueberry, Goji Berry and Acai Berry" hidden />
+        </div>
+
+        <div class="showcase-hint" id="showcaseHint"><span class="arrow">↓</span> Scroll to rotate</div>
+      </div>
+    </div>
+  </div>
+  <noscript>
+    <div class="wrap" style="padding: 40px 0;">
+      <img src="assets/tiama-hero.jpg" alt="Tiama Moisturizing Bars — Blueberry, Goji Berry and Acai Berry" style="border-radius: var(--radius-lg); width:100%; max-width:600px;" />
+      <p style="margin-top:16px; color:var(--ink-soft);">Blueberry, Goji Berry, Acai — 50 g ₹49 · 125 g ₹92</p>
+    </div>
+  </noscript>
+</section>
+
+<section id="quiz">
+  <div class="wrap">
+    <p class="eyebrow">THE MILK-DROP CHALLENGE</p>
+    <h2 class="h2" style="margin-top:10px; margin-bottom:36px;">Three taps. Instant Tiama expert.</h2>
+    <div class="quiz-card">
+      <div class="quiz-progress" id="quizProgress"></div>
+      <div id="quizBody"></div>
+    </div>
+  </div>
+</section>
+
+<section id="final">
+  <div class="final-cta">
+    <p class="eyebrow" style="color:#ffd9c2;">YOUR NEXT BATH COULD BE LESS BASIC</p>
+    <h2 class="h2" style="margin-top:10px;">Start small.<br>Feel the difference in the ritual.</h2>
+    <p class="lede" style="max-width:44ch;">Try 50 g for ₹49 and see what "young at heart" feels like on your own skin.</p>
+    <div class="final-cta-price"><span>TRY 50 g</span><b>₹49</b></div>
+    <div class="final-actions">
+      <a href="#pack" class="btn btn-primary" style="background:var(--milk); color:var(--ink);">Find my Tiama</a>
+    </div>
+    <p class="final-note">Ask for Tiama at your neighbourhood retailer.</p>
+  </div>
+</section>
+
+<footer>
+  <a href="#top" class="logo">TIA<span>MA</span></a>
+  <p class="foot-tag">Moisturizing bars with Japanese Bokkaido Milk.</p>
+  <p class="foot-disclaimer">Fictional concept website created solely for an academic case exercise. No clinical or medical claims are intended.</p>
+</footer>
+
+<script src="assets/three.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
