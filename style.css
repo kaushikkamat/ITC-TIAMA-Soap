@@ -56,6 +56,13 @@ button{font:inherit; color:inherit}
 
 .shell{width:100%; max-width:var(--shell); margin-inline:auto; padding-inline:var(--gutter)}
 
+/* Grid and flex items default to min-width:auto, so a wide child (the story's
+   chapter rail, a long heading) can force its track wider than the screen.
+   On a narrow phone that pushed the whole story grid past the viewport and
+   overflow-x:hidden clipped it instead of scrolling. Let them shrink. */
+.hero-grid > *, .story-grid > *, .mood-body > *, .campaign-grid > *,
+.plans > *, .pillars > *, .footer-grid > *, .stats > *{min-width:0}
+
 .skip{
   position:absolute; left:-9999px; top:0; z-index:100;
   background:var(--ink); color:var(--paper); padding:12px 18px; border-radius:0 0 var(--r-sm) 0;
@@ -222,6 +229,7 @@ p{margin:0 0 16px}
 .scene{opacity:0; transition:opacity .55s var(--ease)}
 .scene.is-on{opacity:1}
 .map-label{font-family:var(--mono); font-size:13px; letter-spacing:.16em; fill:#F1E6D4}
+.map-sub{font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; fill:#F1E6D4; opacity:.6}
 .fruit-label{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; fill:#F1E6D4; opacity:.85}
 .bar-mark{font-family:var(--display); font-size:30px; font-weight:600; letter-spacing:.14em; fill:#FFFFFF; opacity:.5}
 .fruit, #formFruits circle, #formBar, #formSiblings, #dropFall, #splash, #plane{transition:none}
